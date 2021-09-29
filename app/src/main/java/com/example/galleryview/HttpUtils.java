@@ -36,7 +36,7 @@ public class HttpUtils {
 
             Request request = new Request.Builder()
                     .url("https://sm.ms/api/v2/"+"token")
-                    .addHeader("User-Agent", WebSettings.getDefaultUserAgent(MainActivity.context))
+                    .addHeader("User-Agent", WebSettings.getDefaultUserAgent(MainActivity.instance.getApplicationContext()))
                     .post(requestBody)
                     .build();
 
@@ -74,7 +74,7 @@ public class HttpUtils {
                     .url("https://sm.ms/api/v2/upload")
                     .addHeader("Content-Type", "multipart/form-data")
                     .addHeader("Authorization", "cSuN108oywhL5LR8JYGUwzitpLZYHlvF")
-                    .addHeader("User-Agent", WebSettings.getDefaultUserAgent(MainActivity.context))
+                    .addHeader("User-Agent", WebSettings.getDefaultUserAgent(MainActivity.instance.getApplicationContext()))
                     .post(requestBody)
                     .build();
 

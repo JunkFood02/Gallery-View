@@ -22,9 +22,10 @@
             />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-<ImageView
+<com.bm.library.PhotoView
     android:layout_width="match_parent"
     android:visibility="visible"
+    android:scaleType="centerInside"
     android:layout_height="match_parent"
     android:id="@+id/fullscreenImage"/>
 </FrameLayout>

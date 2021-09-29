@@ -3,13 +3,11 @@ package com.example.galleryview;
 import static com.example.galleryview.MainActivity.BOOK_TITLE;
 import static com.example.galleryview.MainActivity.instance;
 
-import android.content.ContentValues;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,7 +21,6 @@ import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.airbnb.lottie.LottieAnimationView;
-import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +46,7 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.gallery_item, parent, false);
         final ViewHolder holder = new ViewHolder(view);
-        helper = new MyDatabaseHelper(MainActivity.context, "Gallery.db", null, 1);
+        helper = new MyDatabaseHelper(instance.getApplicationContext(), "Gallery.db", null, 1);
         db = helper.getWritableDatabase();
         holder.cardView.setOnClickListener(v -> {
             int position = holder.getLayoutPosition();
@@ -90,13 +87,12 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
         if (bitmap != null) {
             holder.imageView.setImageBitmap(bitmap);
         } else {
-            Toast.makeText(MainActivity.context, "Failed to get bitmap.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(instance.getApplicationContext(), "Failed to get bitmap.", Toast.LENGTH_SHORT).show();
         }
 
 
-        if(galleryItem.IS_LIKED())
-        {
-            holder.lottieAnimationView.setProgress((float)1.0);
+        if (galleryItem.IS_LIKED()) {
+            holder.lottieAnimationView.setProgress((float) 1.0);
             Log.d(TAG, "LIKE!");
         }
         holder.lottieAnimationView.setOnClickListener(v -> {
@@ -104,21 +100,22 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
                 holder.lottieAnimationView.setSpeed((float) 1.0);
                 holder.lottieAnimationView.playAnimation();
                 galleryItem.clickLike();
-                Toast.makeText(MainActivity.context, "Like", Toast.LENGTH_SHORT).show();
+                Toast.makeText(instance.getApplicationContext(), "Like", Toast.LENGTH_SHORT).show();
             } else {
                 holder.lottieAnimationView.setSpeed((float) -1.0);
                 holder.lottieAnimationView.playAnimation();
                 galleryItem.clickLike();
-                Toast.makeText(MainActivity.context, "Like Undo", Toast.LENGTH_SHORT).show();
+                Toast.makeText(instance.getApplicationContext(), "Like Undo", Toast.LENGTH_SHORT).show();
             }
 
         });
     }
 
     public void addImage(GalleryItem galleryItem) {
-        insertImage(galleryItem,0);
+        insertImage(galleryItem, 0);
     }
-    public void insertImage(GalleryItem galleryItem,int position) {
+
+    public void insertImage(GalleryItem galleryItem, int position) {
         ItemList.add(position, galleryItem);
         notifyItemInserted(position);
     }
@@ -131,12 +128,12 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
     @Override
     public void onItemDelete(int position, ViewHolder holder) {
         GalleryItem currentItem = ItemList.get(position);
-        helper = new MyDatabaseHelper(MainActivity.context, "Gallery.db", null, 1);
+        helper = new MyDatabaseHelper(instance.getApplicationContext(), "Gallery.db", null, 1);
         db = helper.getWritableDatabase();
         db.delete(BOOK_TITLE, "id=?", new String[]{"" + currentItem.getId()});
         ItemList.remove(position);
         notifyItemRemoved(position);
-        instance.undoRemove(currentItem,position);
+        instance.undoRemove(currentItem, position);
     }
 
 
@@ -146,6 +143,7 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
         LottieAnimationView lottieAnimationView;
         TextView textView;
         CardView cardView;
+
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             Log.d(TAG, "init: ");
