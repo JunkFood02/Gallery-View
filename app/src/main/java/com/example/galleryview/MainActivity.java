@@ -33,6 +33,7 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
+import com.bm.library.PhotoView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -40,11 +41,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-    public static Context context;
+
     ItemAdapter adapter;
     int operationCode = 0;
     GalleryItem galleryItem = null;
-    ConstraintLayout constraintLayout;
     FloatingActionButton selectButton, clearAllButton;
     Button uploadButton;
     List<GalleryItem> galleryItemList = new ArrayList<>();
@@ -234,9 +234,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void init() {
         recyclerView = findViewById(R.id.galleryRecyclerView);
+
         layoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(layoutManager);
-        context = getApplicationContext();
         selectButton = findViewById(R.id.button2);
         uploadButton = findViewById(R.id.uploadButton);
         clearAllButton = findViewById(R.id.deleteButton);

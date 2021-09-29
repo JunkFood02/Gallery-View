@@ -14,15 +14,17 @@ import android.widget.VideoView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
+import com.bm.library.PhotoView;
+
 public class BigPictureActivity extends AppCompatActivity implements View.OnClickListener {
     VideoView videoView;
-
+    PhotoView fullscreenImage;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_big_pigture);
-        ImageView fullscreenImage = findViewById(R.id.fullscreenImage);
         ConstraintLayout videoLayout = findViewById(R.id.videoPlayLayout);
+        fullscreenImage = findViewById(R.id.fullscreenImage);
         videoView = findViewById(R.id.videoView);
         Intent intent = getIntent();
         intent.getStringExtra("path");
@@ -33,6 +35,8 @@ public class BigPictureActivity extends AppCompatActivity implements View.OnClic
             bitmap = BitmapFactory.decodeFile(path);
             if (bitmap != null) {
                 fullscreenImage.setImageBitmap(bitmap);
+                //fullscreenImage.animaFrom(fullscreenImage.getInfo());
+                fullscreenImage.enable();
             } else {
                 Toast.makeText(this, "Fail to load image.", Toast.LENGTH_SHORT).show();
                 finish();
