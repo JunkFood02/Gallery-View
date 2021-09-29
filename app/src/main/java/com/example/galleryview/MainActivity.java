@@ -3,11 +3,12 @@ package com.example.galleryview;
 import android.Manifest;
 import android.content.ContentUris;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -15,7 +16,11 @@ import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
 import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResult;
@@ -26,13 +31,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
+import com.bm.library.Info;
 import com.bm.library.PhotoView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
@@ -44,14 +49,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     ItemAdapter adapter;
     int operationCode = 0;
+    Info info;
     GalleryItem galleryItem = null;
     FloatingActionButton selectButton, clearAllButton;
     Button uploadButton;
     List<GalleryItem> galleryItemList = new ArrayList<>();
     ActivityResultLauncher<Intent> launcher_album;
     RecyclerView recyclerView;
+    ImageView imageView;
+    Animation fadeIn, fadeOut;
     SQLiteDatabase db;
+    FrameLayout background;
     MyDatabaseHelper helper;
+    PhotoView photoView;
     StaggeredGridLayoutManager layoutManager;
     public static final String BOOK_TITLE = "Gallery";
     private static final String TAG = "MainActivity";
@@ -120,7 +130,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 ContentValues values = new ContentValues();
                                 values.put("imagepath", galleryItem.getImagePath());
                                 values.put("type", galleryItem.getType());
-                                values.put("liked",galleryItem.getIS_LIKED());
+                                values.put("liked", galleryItem.getIS_LIKED());
                                 recyclerView.scrollToPosition(0);
                                 long imageID = db.insert(BOOK_TITLE, null, values);
                                 galleryItem.setId(imageID);
@@ -234,10 +244,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void init() {
         recyclerView = findViewById(R.id.galleryRecyclerView);
-
+        background = findViewById(R.id.background);
         layoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(layoutManager);
         selectButton = findViewById(R.id.button2);
+        photoView = findViewById(R.id.mainFullscreenImage);
+        imageView = findViewById(R.id.imageView);
         uploadButton = findViewById(R.id.uploadButton);
         clearAllButton = findViewById(R.id.deleteButton);
         uploadButton.setOnClickListener(this);
@@ -259,12 +271,59 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     ContentValues values = new ContentValues();
                     values.put("imagepath", currentItem.getImagePath());
                     values.put("type", currentItem.getType());
-                    values.put("liked",currentItem.getIS_LIKED());
+                    values.put("liked", currentItem.getIS_LIKED());
                     long imageID = db.insert(BOOK_TITLE, null, values);
                     currentItem.setId(imageID);
                     adapter.insertImage(currentItem, position);
 
                     recyclerView.scrollToPosition(position);
                 }).show();
+    }
+
+    public void showFullscreenPhoto(String path, Info imageInfo) {
+        Log.d(TAG, path);
+        photoView = findViewById(R.id.mainFullscreenImage);
+        info = imageInfo;
+        Bitmap bitmap = BitmapFactory.decodeFile(path);
+        if (bitmap != null) {
+            photoView.setImageBitmap(bitmap);
+            photoView.setAnimaDuring(200);
+            photoView.animaFrom(info);
+            photoView.enable();
+            photoView.setVisibility(View.VISIBLE);
+            backgroundChange();
+            photoView.setOnClickListener(v -> hideFullscreenPhoto());
+        } else {
+            Toast.makeText(this, "Fail to load image.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void hideFullscreenPhoto() {
+        photoView.destroyDrawingCache();
+        backgroundChange();
+        photoView.animaTo(info, () -> photoView.setVisibility(View.INVISIBLE));
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (photoView.getVisibility() == View.VISIBLE) {
+            hideFullscreenPhoto();
+        } else
+            super.onBackPressed();
+    }
+
+    public void backgroundChange() {
+
+        fadeIn = new AlphaAnimation(0.0f, 0.9f);
+        fadeOut = new AlphaAnimation(0.9f, 0.0f);
+        fadeIn.setDuration(photoView.getAnimaDuring());
+        fadeOut.setDuration(photoView.getAnimaDuring());
+        if (background.getVisibility() == View.INVISIBLE) {
+            background.setVisibility(View.VISIBLE);
+            background.startAnimation(fadeIn);
+        } else {
+            background.startAnimation(fadeOut);
+            background.setVisibility(View.INVISIBLE);
+        }
     }
 }
