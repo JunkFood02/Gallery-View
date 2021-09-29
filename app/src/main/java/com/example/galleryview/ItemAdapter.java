@@ -6,8 +6,8 @@ import static com.example.galleryview.MainActivity.instance;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
+import android.net.Uri;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,7 +21,11 @@ import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.airbnb.lottie.LottieAnimationView;
+import com.bm.library.Info;
+import com.bm.library.PhotoView;
+import com.bumptech.glide.Glide;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,14 +52,7 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
         final ViewHolder holder = new ViewHolder(view);
         helper = new MyDatabaseHelper(instance.getApplicationContext(), "Gallery.db", null, 1);
         db = helper.getWritableDatabase();
-        holder.cardView.setOnClickListener(v -> {
-            int position = holder.getLayoutPosition();
-            Intent intent = new Intent(v.getContext(), BigPictureActivity.class);
-            GalleryItem item = ItemList.get(position);
-            intent.putExtra("path", item.getImagePath());
-            intent.putExtra("media_type", item.getType());
-            v.getContext().startActivity(intent);
-        });
+
 
 
         return holder;
@@ -78,19 +75,17 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
         Log.d(TAG, "ImagePath : " + galleryItem.getImagePath());
         Bitmap bitmap;
         if (galleryItem.getType() == GalleryItem.TYPE_IMAGE) {
-            bitmap = BitmapFactory.decodeFile(galleryItem.getImagePath());
+            Glide.with(instance.getApplicationContext()).load(new File(galleryItem.getImagePath())).into(holder.imageView);
             holder.textView.setText("Image Title " + position);
         } else {
             bitmap = createThumbnailAtTime(galleryItem.getImagePath(), 1);//生成第一秒的截图
             holder.textView.setText("Video Title " + position);
+            if (bitmap != null) {
+                holder.imageView.setImageBitmap(bitmap);
+            } else {
+                Toast.makeText(instance.getApplicationContext(), "Failed to get bitmap.", Toast.LENGTH_SHORT).show();
+            }
         }
-        if (bitmap != null) {
-            holder.imageView.setImageBitmap(bitmap);
-        } else {
-            Toast.makeText(instance.getApplicationContext(), "Failed to get bitmap.", Toast.LENGTH_SHORT).show();
-        }
-
-
         if (galleryItem.IS_LIKED()) {
             holder.lottieAnimationView.setProgress((float) 1.0);
             Log.d(TAG, "LIKE!");
@@ -107,7 +102,20 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
                 galleryItem.clickLike();
                 Toast.makeText(instance.getApplicationContext(), "Like Undo", Toast.LENGTH_SHORT).show();
             }
-
+        });
+        holder.cardView.setOnClickListener(v -> {
+            if( galleryItem.getType()==GalleryItem.TYPE_VIDEO)
+            {
+                Intent intent = new Intent(v.getContext(), BigPictureActivity.class);
+                intent.putExtra("path", galleryItem.getImagePath());
+                intent.putExtra("media_type", galleryItem.getType());
+                v.getContext().startActivity(intent);
+            }
+            else
+            {
+                Info info= PhotoView.getImageViewInfo(holder.imageView);
+                instance.showFullscreenPhoto(galleryItem.getImagePath(),info);
+            }
         });
     }
 

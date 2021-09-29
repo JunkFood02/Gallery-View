@@ -6,7 +6,23 @@
     android:layout_gravity="bottom"
     android:id="@+id/CoordinatorLayout"
     android:layout_height="match_parent">
-
+    <com.bm.library.PhotoView
+        android:layout_width="match_parent"
+        android:visibility="visible"
+        android:scaleType="centerInside"
+        android:layout_gravity="center"
+        android:translationZ="15dp"
+        android:layout_height="match_parent"
+        android:id="@+id/mainFullscreenImage"/>
+    <FrameLayout
+        android:id="@+id/background"
+        android:visibility="invisible"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#333333"
+        android:translationZ="10dp"
+        android:alpha="0.9">
+    </FrameLayout>
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
