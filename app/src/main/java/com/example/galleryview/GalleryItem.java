@@ -2,18 +2,20 @@ package com.example.galleryview;
 
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.Log;
+
+import com.bm.library.Info;
 
 public class GalleryItem {
     private String imagePath;
+    private Info info;
     private static final String TAG = "GalleryItem";
     private int type;
     private long id;
     private int IS_LIKED = NOT_LIKED;
     private final static int LIKED = 1;
     private final static int NOT_LIKED = -1;
-    private static MyDatabaseHelper helper = MainActivity.instance.helper;
-    private static SQLiteDatabase db = MainActivity.instance.db;
+    private static MyDatabaseHelper helper;
+    private static SQLiteDatabase db;
 
     public static final int TYPE_IMAGE = 1;
     public static final int TYPE_VIDEO = 2;
@@ -39,9 +41,8 @@ public class GalleryItem {
     }
 
     public void clickLike() {
-        Log.d(TAG, IS_LIKED+"");
         IS_LIKED = -IS_LIKED;
-        Log.d(TAG, IS_LIKED+"");
+        helper = new MyDatabaseHelper(MainActivity.context, "Gallery.db", null, 1);
         db = helper.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put("liked", IS_LIKED);
@@ -76,6 +77,14 @@ public class GalleryItem {
         this.type = type;
         this.id = id;
         this.IS_LIKED = IS_LIKED;
+    }
+
+    public Info getInfo() {
+        return info;
+    }
+
+    public void setInfo(Info info) {
+        this.info = info;
     }
 
     public String getImagePath() {

@@ -13,9 +13,12 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
@@ -30,11 +33,14 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
@@ -48,7 +54,7 @@ import com.google.android.material.snackbar.Snackbar;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends MyActivity implements View.OnClickListener {
 
     ItemAdapter adapter;
     int operationCode = 0;
@@ -56,6 +62,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     GalleryItem galleryItem = null;
     FloatingActionButton selectButton, clearAllButton;
     Button uploadButton;
+    DrawerLayout drawerLayout;
     List<GalleryItem> galleryItemList = new ArrayList<>();
     ActivityResultLauncher<Intent> launcher_album;
     RecyclerView recyclerView;
@@ -66,30 +73,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     SQLiteDatabase db;
     FrameLayout background;
     MyDatabaseHelper helper;
+    Toolbar toolbar;
     PhotoView photoView;
-    private GalleryItem currentItem = null;
     private int position;
     StaggeredGridLayoutManager layoutManager;
     public static final String BOOK_TITLE = "Gallery";
     private static final String TAG = "MainActivity";
-    private Snackbar snackbar;
-    public static MainActivity instance;
-
+    public static final int SHOW_FULLSCREEN_IMAGE = 1;
+    public static final int UNDO_REMOVE_IMAGE = -1;
+    public Handler handler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        instance = this;
         init();
 
-        readAlbumDataFromDatabase();
         launcher_album = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 new ActivityResultCallback<ActivityResult>() {
                     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
                     @Override
                     public void onActivityResult(ActivityResult result) {
+                        db = helper.getWritableDatabase();
                         String imagePath = null;
                         Log.d(TAG, "onActivityResult: ");
                         boolean IS_IMAGE = true;
@@ -111,7 +117,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                         imagePath = getImagePath(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, selection);
 
                                 } else if ("com.android.providers.downloads.documents".equals(uri.getAuthority())) {
-                                    Uri contentUri = ContentUris.withAppendedId(Uri.parse("content://downloads/public_downloads"), Long.valueOf(docID));
+                                    Uri contentUri = ContentUris.withAppendedId(Uri.parse("content://downloads/public_downloads"), Long.parseLong(docID));
                                     if (IS_IMAGE)
                                         imagePath = getImagePath(contentUri, null);
                                     else
@@ -153,6 +159,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 });
     }
 
+    @Override
+    protected void onDestroy() {
+        handler.removeCallbacksAndMessages(null);
+        super.onDestroy();
+    }
+
+    @Override
+    public void finish() {
+        handler.removeCallbacksAndMessages(null);
+        super.finish();
+    }
 
     @Override
     public void onClick(View v) {
@@ -162,10 +179,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 selectImage();
                 recyclerView.setAdapter(adapter);
                 break;
-            case R.id.uploadButton:
+            /*case R.id.uploadButton:
                 operationCode = 1;
                 selectImage();
-                break;
+                break;*/
             case R.id.deleteButton:
 
                 AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
@@ -182,7 +199,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 dialog.show();
                 //recyclerView.setAdapter(adapter);
         }
-
     }
 
     private void selectImage() {
@@ -205,6 +221,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             openAlbum();
         } else Toast.makeText(this, "You denied the permission.", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home: {
+                drawerLayout.openDrawer(GravityCompat.START);
+                break;
+            }
+        }
+        return true;
     }
 
     public String getImagePath(Uri uri, String selection) {
@@ -232,6 +259,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void readAlbumDataFromDatabase() {
+        recyclerView.setAdapter(adapter);
         db = helper.getReadableDatabase();
         Cursor cursor;
         cursor = db.query(BOOK_TITLE, null, null, null, null, null, null);
@@ -246,84 +274,119 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 adapter.addImage(galleryItem);
             } while (cursor.moveToNext());
         }
-        recyclerView.setAdapter(adapter);
+        cursor.close();
 
     }
 
     private void init() {
+        helper = new MyDatabaseHelper(this, "Gallery.db", null, 1);
         recyclerView = findViewById(R.id.galleryRecyclerView);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        drawerLayout = findViewById(R.id.drawerLayout);
+        setSupportActionBar(toolbar);
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setHomeButtonEnabled(true);
+            actionBar.setHomeAsUpIndicator(R.drawable.outline_menu_24);
+        }
         background = findViewById(R.id.background);
         layoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(layoutManager);
         selectButton = findViewById(R.id.button2);
         photoView = findViewById(R.id.mainFullscreenImage);
         imageView = findViewById(R.id.imageView);
-        uploadButton = findViewById(R.id.uploadButton);
+        fadeIn = new AlphaAnimation(0.0f, 0.9f);
+        fadeOut = new AlphaAnimation(0.9f, 0.0f);
+        //uploadButton = findViewById(R.id.uploadButton);
         coordinatorLayout = findViewById(R.id.CoordinatorLayout);
         clearAllButton = findViewById(R.id.deleteButton);
-        uploadButton.setOnClickListener(this);
+        //uploadButton.setOnClickListener(this);
         selectButton.setOnClickListener(this);
+        selectButton.setLongClickable(true);
+        selectButton.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                Snackbar.make(selectButton, "You've long pressed this button.", Snackbar.LENGTH_SHORT).show();
+                return true;
+            }
+        });
         clearAllButton.setOnClickListener(this);
-        adapter = new ItemAdapter(galleryItemList);
-        strings.add("Upload this image");
-        strings.add("Delete this image");
+        setupHandler();
+        adapter = new ItemAdapter(galleryItemList, handler);
         ItemTouchHelper.Callback callback = new MyItemTouchHelperCallBack(adapter);
         ItemTouchHelper touchHelper = new ItemTouchHelper(callback);
-        recyclerView.setAdapter(adapter);
         touchHelper.attachToRecyclerView(recyclerView);
-        helper = new MyDatabaseHelper(this, "Gallery.db", null, 1);
-        db = helper.getWritableDatabase();
+        readAlbumDataFromDatabase();
+        strings.add("Upload this image");
+        strings.add("Delete this image");
+    }
+
+    private void setupHandler() {
+        handler = new Handler(getMainLooper()) {
+            @Override
+            public void handleMessage(@NonNull Message msg) {
+                super.handleMessage(msg);
+                switch (msg.what) {
+                    case SHOW_FULLSCREEN_IMAGE:
+                        position = msg.arg1;
+                        galleryItem = (GalleryItem) msg.obj;
+                        info = galleryItem.getInfo();
+                        showFullscreenPhoto(galleryItem.getImagePath(), info);
+                        break;
+                    case UNDO_REMOVE_IMAGE:
+                        galleryItem = (GalleryItem) msg.obj;
+                        position = msg.arg1;
+                        undoRemove(galleryItem, position);
+                        break;
+                }
+            }
+        };
     }
 
     public void undoRemove(GalleryItem currentItem, int position) {
-        this.currentItem = currentItem;
+        db = helper.getWritableDatabase();
         this.position = position;
-        Snackbar.make(coordinatorLayout, "Image removed.", Snackbar.LENGTH_SHORT)
+        Snackbar.make(selectButton, "Image removed.", Snackbar.LENGTH_SHORT)
                 .setAction("Undo", v -> {
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            ContentValues values = new ContentValues();
-                            values.put("imagepath", currentItem.getImagePath());
-                            values.put("type", currentItem.getType());
-                            values.put("liked", currentItem.getIS_LIKED());
-                            long imageID = db.insert(BOOK_TITLE, null, values);
-                            currentItem.setId(imageID);
-                        }
+                    new Thread(() -> {
+                        ContentValues values = new ContentValues();
+                        values.put("imagepath", currentItem.getImagePath());
+                        values.put("type", currentItem.getType());
+                        values.put("liked", currentItem.getIS_LIKED());
+                        long imageID = db.insert(BOOK_TITLE, null, values);
+                        currentItem.setId(imageID);
                     }).start();
                     adapter.insertImage(currentItem, position);
                     recyclerView.scrollToPosition(position);
                 })
-                .setAnimationMode(BaseTransientBottomBar.ANIMATION_MODE_FADE)
                 .show();
     }
 
-    public void showFullscreenPhoto(String path, Info imageInfo,int position) {
+    public void showFullscreenPhoto(String path, Info imageInfo) {
         Log.d(TAG, path);
+        drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
         photoView = findViewById(R.id.mainFullscreenImage);
         info = imageInfo;
         Bitmap bitmap = BitmapFactory.decodeFile(path);
         if (bitmap != null) {
             photoView.setImageBitmap(bitmap);
             photoView.setAnimaDuring(200);
-            photoView.setOnLongClickListener(new View.OnLongClickListener() {
-                @Override
-                public boolean onLongClick(View v) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                    builder.setItems(strings.toArray(new String[strings.size()]), (DialogInterface.OnClickListener) (dialog, which) -> {
-                        switch (which) {
-                            case 0:
-                                Toast.makeText(MainActivity.this, "Upload", Toast.LENGTH_SHORT).show();
-                                break;
-                            case 1:
-                                Toast.makeText(MainActivity.this, "Delete", Toast.LENGTH_SHORT).show();
-                                break;
-                        }
-                    });
-                    builder.setCancelable(true);
-                    builder.show();
-                    return true;
-                }
+            photoView.setOnLongClickListener(v -> {
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setItems(strings.toArray(new String[0]), (DialogInterface.OnClickListener) (dialog, which) -> {
+                    switch (which) {
+                        case 0:
+                            Toast.makeText(MainActivity.this, "Upload", Toast.LENGTH_SHORT).show();
+                            break;
+                        case 1:
+                            Toast.makeText(MainActivity.this, "Delete", Toast.LENGTH_SHORT).show();
+                            break;
+                    }
+                });
+                builder.setCancelable(true);
+                builder.show();
+                return true;
             });
             photoView.animaFrom(info);
             photoView.enable();
@@ -341,22 +404,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void hideFullscreenPhoto() {
         photoView.destroyDrawingCache();
+        drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
         backgroundChange();
         photoView.animaTo(info, () -> photoView.setVisibility(View.INVISIBLE));
     }
 
     @Override
     public void onBackPressed() {
-        if (photoView.getVisibility() == View.VISIBLE) {
+        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START);
+        } else if (photoView.getVisibility() == View.VISIBLE)
             hideFullscreenPhoto();
-        } else
+        else {
             super.onBackPressed();
+        }
+
+
     }
 
     public void backgroundChange() {
 
-        fadeIn = new AlphaAnimation(0.0f, 0.9f);
-        fadeOut = new AlphaAnimation(0.9f, 0.0f);
         fadeIn.setDuration(photoView.getAnimaDuring());
         fadeOut.setDuration(photoView.getAnimaDuring());
         if (background.getVisibility() == View.INVISIBLE) {
