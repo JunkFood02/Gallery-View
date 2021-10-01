@@ -18,10 +18,10 @@ import android.os.Message;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
-import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -32,10 +32,17 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
@@ -56,13 +63,15 @@ public class MainActivity extends MyActivity implements View.OnClickListener {
     Info info;
     GalleryItem galleryItem = null;
     FloatingActionButton selectButton, clearAllButton;
-    Button uploadButton;
+    //Button uploadButton;
     List<GalleryItem> galleryItemList = new ArrayList<>();
     ActivityResultLauncher<Intent> launcher_album;
     RecyclerView recyclerView;
     CoordinatorLayout coordinatorLayout;
     ImageView imageView;
     Handler handler;
+    Toolbar toolbar;
+    DrawerLayout drawerLayout;
     List<String> strings = new ArrayList<>();
     Animation fadeIn, fadeOut;
     SQLiteDatabase db;
@@ -164,10 +173,10 @@ public class MainActivity extends MyActivity implements View.OnClickListener {
                 selectImage();
                 recyclerView.setAdapter(adapter);
                 break;
-            case R.id.uploadButton:
+            /*case R.id.uploadButton:
                 operationCode = 1;
                 selectImage();
-                break;
+                break;*/
             case R.id.deleteButton:
 
                 AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
@@ -255,15 +264,27 @@ public class MainActivity extends MyActivity implements View.OnClickListener {
     private void init() {
         recyclerView = findViewById(R.id.galleryRecyclerView);
         background = findViewById(R.id.background);
+        toolbar = findViewById(R.id.toolBar);
+        drawerLayout = findViewById(R.id.drawerlayout);
+        setSupportActionBar(toolbar);
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            Log.d(TAG, actionBar+"");
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setHomeButtonEnabled(true);
+            actionBar.setHomeAsUpIndicator(R.drawable.outline_menu_24);
+        }
         layoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(layoutManager);
         selectButton = findViewById(R.id.button2);
         photoView = findViewById(R.id.mainFullscreenImage);
         imageView = findViewById(R.id.imageView);
-        uploadButton = findViewById(R.id.uploadButton);
+        //uploadButton = findViewById(R.id.uploadButton);
         coordinatorLayout = findViewById(R.id.CoordinatorLayout);
         clearAllButton = findViewById(R.id.deleteButton);
-        uploadButton.setOnClickListener(this);
+        //uploadButton.setOnClickListener(this);
+        fadeIn = new AlphaAnimation(0.0f, 0.9f);
+        fadeOut = new AlphaAnimation(0.9f, 0.0f);
         selectButton.setOnClickListener(this);
         clearAllButton.setOnClickListener(this);
         setupHandler();
@@ -319,12 +340,15 @@ public class MainActivity extends MyActivity implements View.OnClickListener {
                 .show();
     }
 
+
     public void showFullscreenPhoto(GalleryItem currentItem) {
+
 
         photoView = findViewById(R.id.mainFullscreenImage);
         info = currentItem.getInfo();
         Bitmap bitmap = BitmapFactory.decodeFile(currentItem.getImagePath());
         if (bitmap != null) {
+            drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
             photoView.setImageBitmap(bitmap);
             photoView.setAnimaDuring(200);
             photoView.setOnLongClickListener(new View.OnLongClickListener() {
@@ -362,22 +386,33 @@ public class MainActivity extends MyActivity implements View.OnClickListener {
 
     public void hideFullscreenPhoto() {
         photoView.destroyDrawingCache();
+        drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
         backgroundChange();
         photoView.animaTo(info, () -> photoView.setVisibility(View.INVISIBLE));
     }
 
     @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                drawerLayout.openDrawer(GravityCompat.START);
+                break;
+        }
+        return true;
+
+    }
+
+    @Override
     public void onBackPressed() {
-        if (photoView.getVisibility() == View.VISIBLE) {
+        if (drawerLayout.isDrawerOpen(GravityCompat.START))
+            drawerLayout.closeDrawer(GravityCompat.START);
+        else if (photoView.getVisibility() == View.VISIBLE) {
             hideFullscreenPhoto();
         } else
             super.onBackPressed();
     }
 
     public void backgroundChange() {
-
-        fadeIn = new AlphaAnimation(0.0f, 0.9f);
-        fadeOut = new AlphaAnimation(0.9f, 0.0f);
         fadeIn.setDuration(photoView.getAnimaDuring());
         fadeOut.setDuration(photoView.getAnimaDuring());
         if (background.getVisibility() == View.INVISIBLE) {
