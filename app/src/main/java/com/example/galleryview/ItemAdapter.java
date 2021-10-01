@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.media.MediaMetadataRetriever;
-import android.net.Uri;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -33,7 +32,7 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
     private static final String TAG = "ItemAdapter";
     SQLiteDatabase db;
     MyDatabaseHelper helper;
-
+    public ViewHolder holder;
     private List<GalleryItem> ItemList = new ArrayList<>();
 
     public void clearList() {
@@ -53,8 +52,7 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
         helper = new MyDatabaseHelper(instance.getApplicationContext(), "Gallery.db", null, 1);
         db = helper.getWritableDatabase();
 
-
-
+        this.holder =holder;
         return holder;
     }
 
@@ -104,17 +102,14 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
             }
         });
         holder.cardView.setOnClickListener(v -> {
-            if( galleryItem.getType()==GalleryItem.TYPE_VIDEO)
-            {
+            if (galleryItem.getType() == GalleryItem.TYPE_VIDEO) {
                 Intent intent = new Intent(v.getContext(), BigPictureActivity.class);
                 intent.putExtra("path", galleryItem.getImagePath());
                 intent.putExtra("media_type", galleryItem.getType());
                 v.getContext().startActivity(intent);
-            }
-            else
-            {
-                Info info= PhotoView.getImageViewInfo(holder.imageView);
-                instance.showFullscreenPhoto(galleryItem.getImagePath(),info);
+            } else {
+                Info info = PhotoView.getImageViewInfo(holder.imageView);
+                instance.showFullscreenPhoto(galleryItem.getImagePath(), info,position);
             }
         });
     }
@@ -143,7 +138,6 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
         notifyItemRemoved(position);
         instance.undoRemove(currentItem, position);
     }
-
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         View ItemView;

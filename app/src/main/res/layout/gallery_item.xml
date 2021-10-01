@@ -3,12 +3,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_height="wrap_content"
     android:layout_width="match_parent"
-    app:cardCornerRadius="12dp"
+    app:cardCornerRadius="6dp"
     android:id="@+id/cardView"
     android:adjustViewBounds="true"
     android:foreground="?android:attr/selectableItemBackground"
     android:elevation="6dp"
-    android:layout_margin="12dp"
+    android:layout_margin="6dp"
     android:clickable="true"
 >
 
