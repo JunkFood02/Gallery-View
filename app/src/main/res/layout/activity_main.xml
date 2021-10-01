@@ -1,88 +1,114 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/CoordinatorLayout"
+    android:id="@+id/drawerLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    >
-
-    <com.bm.library.PhotoView
-        android:id="@+id/mainFullscreenImage"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scaleType="centerInside"
-        android:translationZ="16dp"
-        android:visibility="invisible" />
+    tools:context=".MainActivity">
 
     <FrameLayout
-        android:id="@+id/background"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:alpha="0.9"
-        android:background="#333333"
-        android:translationZ="12dp"
-        android:visibility="invisible">
+        android:layout_height="match_parent">
 
+        <androidx.coordinatorlayout.widget.CoordinatorLayout
+            android:id="@+id/CoordinatorLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <com.google.android.material.appbar.AppBarLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <androidx.appcompat.widget.Toolbar
+                    android:id="@+id/toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="?attr/actionBarSize"
+                    android:background="?attr/colorPrimary"
+                    android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+                    app:layout_scrollFlags="scroll|enterAlways|snap"
+                    app:popupTheme="@style/ThemeOverlay.AppCompat.DayNight.ActionBar" />
+
+            </com.google.android.material.appbar.AppBarLayout>
+
+            <com.bm.library.PhotoView
+                android:id="@+id/mainFullscreenImage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerInside"
+                android:translationZ="16dp"
+                android:visibility="invisible" />
+
+            <FrameLayout
+                android:id="@+id/background"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:alpha="0.9"
+                android:background="#333333"
+                android:translationZ="12dp"
+                android:visibility="invisible">
+
+            </FrameLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/galleryRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/button2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="18dp"
+                android:elevation="6dp"
+                app:backgroundTint="@color/purple_500"
+                app:layout_anchor="@id/galleryRecyclerView"
+                app:layout_anchorGravity="bottom|end"
+                app:rippleColor="#dddddd"
+                app:srcCompat="@drawable/outline_add_white_48"
+                app:tint="@color/white" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/deleteButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|end"
+                android:elevation="6dp"
+                android:translationY="-18dp"
+                app:backgroundTint="@color/purple_500"
+                app:layout_anchor="@id/button2"
+                app:layout_anchorGravity="top"
+                app:rippleColor="#dddddd"
+                app:srcCompat="@drawable/outline_clear_white_48"
+                app:tint="@color/white" />
+
+        </androidx.coordinatorlayout.widget.CoordinatorLayout>
     </FrameLayout>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".MainActivity">
+        android:layout_gravity="start"
+        android:clickable="true"
+        android:focusable="true"
+        >
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/galleryRecyclerView"
+        <androidx.appcompat.widget.SwitchCompat
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:translationZ="10dp"
+            android:layout_gravity="center"
+            android:gravity="center" />
+
+        <TextView
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
 
-        <Button
-            android:id="@+id/button1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="add"
-            android:visibility="invisible"
-            app:layout_constraintEnd_toStartOf="@id/uploadButton"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:background="@color/design_default_color_background"
 
-        <Button
-            android:id="@+id/uploadButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="upload"
-            android:visibility="invisible"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/button1"
-            app:layout_constraintTop_toTopOf="parent" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/button2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="18dp"
-        android:elevation="6dp"
-        app:backgroundTint="@color/purple_500"
-        app:layout_anchor="@id/galleryRecyclerView"
-        app:layout_anchorGravity="bottom|end"
-        app:rippleColor="#dddddd"
-        app:srcCompat="@drawable/outline_add_white_48"
-        app:tint="@color/white" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/deleteButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="top|end"
-        android:elevation="6dp"
-        android:translationY="-18dp"
-        app:backgroundTint="@color/purple_500"
-        app:layout_anchor="@id/button2"
-        app:layout_anchorGravity="top"
-        app:rippleColor="#dddddd"
-        app:srcCompat="@drawable/outline_clear_white_48"
-        app:tint="@color/white" />
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+            android:gravity="center"
+            android:text="Here should be a NavigationView."
+            android:textSize="30sp" />
+    </FrameLayout>
+</androidx.drawerlayout.widget.DrawerLayout>
