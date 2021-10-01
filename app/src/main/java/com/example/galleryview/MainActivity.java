@@ -3,6 +3,7 @@ package com.example.galleryview;
 import android.Manifest;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -31,6 +32,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.ItemTouchHelper;
@@ -40,6 +42,7 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 import com.bm.library.Info;
 import com.bm.library.PhotoView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
@@ -56,15 +59,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     List<GalleryItem> galleryItemList = new ArrayList<>();
     ActivityResultLauncher<Intent> launcher_album;
     RecyclerView recyclerView;
+    CoordinatorLayout coordinatorLayout;
     ImageView imageView;
+    List<String> strings = new ArrayList<>();
     Animation fadeIn, fadeOut;
     SQLiteDatabase db;
     FrameLayout background;
     MyDatabaseHelper helper;
     PhotoView photoView;
+    private GalleryItem currentItem = null;
+    private int position;
     StaggeredGridLayoutManager layoutManager;
     public static final String BOOK_TITLE = "Gallery";
     private static final String TAG = "MainActivity";
+    private Snackbar snackbar;
     public static MainActivity instance;
 
 
@@ -162,7 +170,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
                 dialog.setTitle("Remove All Images");
-                dialog.setMessage("Are you to remove all the images? " + "This operation cannot be withdrawn.");
+                dialog.setMessage("Are you sure to remove all the images? " + "This operation cannot be withdrawn.");
                 dialog.setPositiveButton("Confirm", (dialog1, which) -> {
                     helper.onClear(db);
                     adapter.clearList();
@@ -251,36 +259,46 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         photoView = findViewById(R.id.mainFullscreenImage);
         imageView = findViewById(R.id.imageView);
         uploadButton = findViewById(R.id.uploadButton);
+        coordinatorLayout = findViewById(R.id.CoordinatorLayout);
         clearAllButton = findViewById(R.id.deleteButton);
         uploadButton.setOnClickListener(this);
         selectButton.setOnClickListener(this);
         clearAllButton.setOnClickListener(this);
         adapter = new ItemAdapter(galleryItemList);
+        strings.add("Upload this image");
+        strings.add("Delete this image");
         ItemTouchHelper.Callback callback = new MyItemTouchHelperCallBack(adapter);
         ItemTouchHelper touchHelper = new ItemTouchHelper(callback);
         recyclerView.setAdapter(adapter);
         touchHelper.attachToRecyclerView(recyclerView);
         helper = new MyDatabaseHelper(this, "Gallery.db", null, 1);
         db = helper.getWritableDatabase();
-
     }
 
     public void undoRemove(GalleryItem currentItem, int position) {
-        Snackbar.make(selectButton, "Image removed.", Snackbar.LENGTH_SHORT)
+        this.currentItem = currentItem;
+        this.position = position;
+        Snackbar.make(coordinatorLayout, "Image removed.", Snackbar.LENGTH_SHORT)
                 .setAction("Undo", v -> {
-                    ContentValues values = new ContentValues();
-                    values.put("imagepath", currentItem.getImagePath());
-                    values.put("type", currentItem.getType());
-                    values.put("liked", currentItem.getIS_LIKED());
-                    long imageID = db.insert(BOOK_TITLE, null, values);
-                    currentItem.setId(imageID);
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            ContentValues values = new ContentValues();
+                            values.put("imagepath", currentItem.getImagePath());
+                            values.put("type", currentItem.getType());
+                            values.put("liked", currentItem.getIS_LIKED());
+                            long imageID = db.insert(BOOK_TITLE, null, values);
+                            currentItem.setId(imageID);
+                        }
+                    }).start();
                     adapter.insertImage(currentItem, position);
-
                     recyclerView.scrollToPosition(position);
-                }).show();
+                })
+                .setAnimationMode(BaseTransientBottomBar.ANIMATION_MODE_FADE)
+                .show();
     }
 
-    public void showFullscreenPhoto(String path, Info imageInfo) {
+    public void showFullscreenPhoto(String path, Info imageInfo,int position) {
         Log.d(TAG, path);
         photoView = findViewById(R.id.mainFullscreenImage);
         info = imageInfo;
@@ -288,11 +306,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (bitmap != null) {
             photoView.setImageBitmap(bitmap);
             photoView.setAnimaDuring(200);
+            photoView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                    builder.setItems(strings.toArray(new String[strings.size()]), (DialogInterface.OnClickListener) (dialog, which) -> {
+                        switch (which) {
+                            case 0:
+                                Toast.makeText(MainActivity.this, "Upload", Toast.LENGTH_SHORT).show();
+                                break;
+                            case 1:
+                                Toast.makeText(MainActivity.this, "Delete", Toast.LENGTH_SHORT).show();
+                                break;
+                        }
+                    });
+                    builder.setCancelable(true);
+                    builder.show();
+                    return true;
+                }
+            });
             photoView.animaFrom(info);
             photoView.enable();
             photoView.setVisibility(View.VISIBLE);
             backgroundChange();
-            photoView.setOnClickListener(v -> hideFullscreenPhoto());
+            photoView.setOnClickListener(v -> {
+                if (photoView.getVisibility() == View.VISIBLE) {
+                    hideFullscreenPhoto();
+                }
+            });
         } else {
             Toast.makeText(this, "Fail to load image.", Toast.LENGTH_SHORT).show();
         }
