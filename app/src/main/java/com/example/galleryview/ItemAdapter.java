@@ -1,12 +1,13 @@
 package com.example.galleryview;
 
 import static com.example.galleryview.MainActivity.BOOK_TITLE;
-import static com.example.galleryview.MainActivity.instance;
 
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.media.MediaMetadataRetriever;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -32,16 +33,20 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
     private static final String TAG = "ItemAdapter";
     SQLiteDatabase db;
     MyDatabaseHelper helper;
+    Handler handler;
     public ViewHolder holder;
     private List<GalleryItem> ItemList = new ArrayList<>();
+
+    public ItemAdapter(List<GalleryItem> itemList,Handler handler) {
+        this.handler = handler;
+        ItemList = itemList;
+    }
 
     public void clearList() {
         while (!ItemList.isEmpty()) {
             notifyItemRemoved(0);
             ItemList.remove(0);
         }
-
-
     }
 
     @NonNull
@@ -49,16 +54,14 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.gallery_item, parent, false);
         final ViewHolder holder = new ViewHolder(view);
-        helper = new MyDatabaseHelper(instance.getApplicationContext(), "Gallery.db", null, 1);
+        helper = new MyDatabaseHelper(MainActivity.getContext(), "Gallery.db", null, 1);
         db = helper.getWritableDatabase();
 
         this.holder =holder;
         return holder;
     }
 
-    public ItemAdapter(List<GalleryItem> itemList) {
-        ItemList = itemList;
-    }
+
 
     private Bitmap createThumbnailAtTime(String filePath, int timeInSeconds) {
         MediaMetadataRetriever mMMR = new MediaMetadataRetriever();
@@ -73,7 +76,7 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
         Log.d(TAG, "ImagePath : " + galleryItem.getImagePath());
         Bitmap bitmap;
         if (galleryItem.getType() == GalleryItem.TYPE_IMAGE) {
-            Glide.with(instance.getApplicationContext()).load(new File(galleryItem.getImagePath())).into(holder.imageView);
+            Glide.with(MainActivity.getContext()).load(new File(galleryItem.getImagePath())).into(holder.imageView);
             holder.textView.setText("Image Title " + position);
         } else {
             bitmap = createThumbnailAtTime(galleryItem.getImagePath(), 1);//生成第一秒的截图
@@ -81,7 +84,7 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
             if (bitmap != null) {
                 holder.imageView.setImageBitmap(bitmap);
             } else {
-                Toast.makeText(instance.getApplicationContext(), "Failed to get bitmap.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.getContext(), "Failed to get bitmap.", Toast.LENGTH_SHORT).show();
             }
         }
         if (galleryItem.IS_LIKED()) {
@@ -93,12 +96,12 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
                 holder.lottieAnimationView.setSpeed((float) 1.0);
                 holder.lottieAnimationView.playAnimation();
                 galleryItem.clickLike();
-                Toast.makeText(instance.getApplicationContext(), "Like", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.getContext(), "Like", Toast.LENGTH_SHORT).show();
             } else {
                 holder.lottieAnimationView.setSpeed((float) -1.0);
                 holder.lottieAnimationView.playAnimation();
                 galleryItem.clickLike();
-                Toast.makeText(instance.getApplicationContext(), "Like Undo", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.getContext(), "Like Undo", Toast.LENGTH_SHORT).show();
             }
         });
         holder.cardView.setOnClickListener(v -> {
@@ -109,7 +112,10 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
                 v.getContext().startActivity(intent);
             } else {
                 Info info = PhotoView.getImageViewInfo(holder.imageView);
-                instance.showFullscreenPhoto(galleryItem.getImagePath(), info,position);
+                Message message=handler.obtainMessage(MainActivity.SHOW_FULLSCREEN_IMAGE);
+                galleryItem.setInfo(info);
+                message.obj=galleryItem;
+                handler.sendMessage(message);
             }
         });
     }
@@ -131,12 +137,15 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
     @Override
     public void onItemDelete(int position, ViewHolder holder) {
         GalleryItem currentItem = ItemList.get(position);
-        helper = new MyDatabaseHelper(instance.getApplicationContext(), "Gallery.db", null, 1);
+        helper = new MyDatabaseHelper(MainActivity.getContext(), "Gallery.db", null, 1);
         db = helper.getWritableDatabase();
         db.delete(BOOK_TITLE, "id=?", new String[]{"" + currentItem.getId()});
         ItemList.remove(position);
         notifyItemRemoved(position);
-        instance.undoRemove(currentItem, position);
+        Message message=handler.obtainMessage(MainActivity.UNDO_REMOVE);
+        message.obj=currentItem;
+        message.arg1=position;
+        handler.sendMessage(message);
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {

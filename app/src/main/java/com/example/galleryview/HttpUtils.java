@@ -1,7 +1,6 @@
 package com.example.galleryview;
 
 import android.os.Build;
-import android.util.JsonWriter;
 import android.util.Log;
 import android.webkit.WebSettings;
 
@@ -9,7 +8,6 @@ import androidx.annotation.RequiresApi;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,15 +26,15 @@ public class HttpUtils {
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
     public static void getToken() {
         new Thread(() -> {
-            OkHttpClient client=new OkHttpClient();
+            OkHttpClient client = new OkHttpClient();
             RequestBody requestBody = new FormBody.Builder()
                     .add("username", "sunnycloud105@gmail.com")
                     .add("password", "Whathappened123")
                     .build();
 
             Request request = new Request.Builder()
-                    .url("https://sm.ms/api/v2/"+"token")
-                    .addHeader("User-Agent", WebSettings.getDefaultUserAgent(MainActivity.instance.getApplicationContext()))
+                    .url("https://sm.ms/api/v2/" + "token")
+                    .addHeader("User-Agent", WebSettings.getDefaultUserAgent(MainActivity.getContext()))
                     .post(requestBody)
                     .build();
 
@@ -74,7 +72,7 @@ public class HttpUtils {
                     .url("https://sm.ms/api/v2/upload")
                     .addHeader("Content-Type", "multipart/form-data")
                     .addHeader("Authorization", "cSuN108oywhL5LR8JYGUwzitpLZYHlvF")
-                    .addHeader("User-Agent", WebSettings.getDefaultUserAgent(MainActivity.instance.getApplicationContext()))
+                    .addHeader("User-Agent", WebSettings.getDefaultUserAgent(MainActivity.getContext()))
                     .post(requestBody)
                     .build();
 
@@ -89,7 +87,7 @@ public class HttpUtils {
             }
             Log.d(TAG, responseData);
             try {
-                JSONArray jsonArray=new JSONArray(responseData) ;
+                JSONArray jsonArray = new JSONArray(responseData);
 
             } catch (JSONException e) {
                 e.printStackTrace();

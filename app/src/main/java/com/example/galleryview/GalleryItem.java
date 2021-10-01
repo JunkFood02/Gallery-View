@@ -4,16 +4,18 @@ import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
+import com.bm.library.Info;
+
 public class GalleryItem {
     private String imagePath;
     private static final String TAG = "GalleryItem";
     private int type;
     private long id;
+    private Info info;
     private int IS_LIKED = NOT_LIKED;
     private final static int LIKED = 1;
     private final static int NOT_LIKED = -1;
-    private static MyDatabaseHelper helper = MainActivity.instance.helper;
-    private static SQLiteDatabase db = MainActivity.instance.db;
+    private MyDatabaseHelper helper = helper = new MyDatabaseHelper(MainActivity.getContext(), "Gallery.db", null, 1);
 
     public static final int TYPE_IMAGE = 1;
     public static final int TYPE_VIDEO = 2;
@@ -39,10 +41,10 @@ public class GalleryItem {
     }
 
     public void clickLike() {
-        Log.d(TAG, IS_LIKED+"");
+        Log.d(TAG, IS_LIKED + "");
         IS_LIKED = -IS_LIKED;
-        Log.d(TAG, IS_LIKED+"");
-        db = helper.getWritableDatabase();
+        Log.d(TAG, IS_LIKED + "");
+        SQLiteDatabase db = helper.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put("liked", IS_LIKED);
         db.update(MainActivity.BOOK_TITLE, values, "id=?", new String[]{"" + id});
@@ -56,6 +58,14 @@ public class GalleryItem {
         this.imagePath = imagePath;
         this.type = TYPE_IMAGE;
         IS_LIKED = NOT_LIKED;
+    }
+
+    public Info getInfo() {
+        return info;
+    }
+
+    public void setInfo(Info info) {
+        this.info = info;
     }
 
     public GalleryItem(String imagePath, int type) {

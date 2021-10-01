@@ -13,6 +13,8 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -31,7 +33,6 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -48,7 +49,7 @@ import com.google.android.material.snackbar.Snackbar;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends MyActivity implements View.OnClickListener {
 
     ItemAdapter adapter;
     int operationCode = 0;
@@ -61,6 +62,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     RecyclerView recyclerView;
     CoordinatorLayout coordinatorLayout;
     ImageView imageView;
+    Handler handler;
     List<String> strings = new ArrayList<>();
     Animation fadeIn, fadeOut;
     SQLiteDatabase db;
@@ -71,16 +73,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private int position;
     StaggeredGridLayoutManager layoutManager;
     public static final String BOOK_TITLE = "Gallery";
+    public static final int SHOW_FULLSCREEN_IMAGE = 1;
+    public static final int UNDO_REMOVE = -1;
     private static final String TAG = "MainActivity";
     private Snackbar snackbar;
-    public static MainActivity instance;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        instance = this;
         init();
 
         readAlbumDataFromDatabase();
@@ -264,7 +266,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         uploadButton.setOnClickListener(this);
         selectButton.setOnClickListener(this);
         clearAllButton.setOnClickListener(this);
-        adapter = new ItemAdapter(galleryItemList);
+        setupHandler();
+        adapter = new ItemAdapter(galleryItemList,handler);
         strings.add("Upload this image");
         strings.add("Delete this image");
         ItemTouchHelper.Callback callback = new MyItemTouchHelperCallBack(adapter);
@@ -273,6 +276,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         touchHelper.attachToRecyclerView(recyclerView);
         helper = new MyDatabaseHelper(this, "Gallery.db", null, 1);
         db = helper.getWritableDatabase();
+    }
+
+    private void setupHandler() {
+        handler = new Handler(MainActivity.getContext().getMainLooper()) {
+            @Override
+            public void handleMessage(@NonNull Message msg) {
+                super.handleMessage(msg);
+                switch (msg.what) {
+                    case UNDO_REMOVE:
+                        undoRemove((GalleryItem) msg.obj, msg.arg1);
+                        break;
+                    case SHOW_FULLSCREEN_IMAGE:
+                        showFullscreenPhoto((GalleryItem) msg.obj);
+                        break;
+                }
+
+            }
+        };
     }
 
     public void undoRemove(GalleryItem currentItem, int position) {
@@ -298,11 +319,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .show();
     }
 
-    public void showFullscreenPhoto(String path, Info imageInfo,int position) {
-        Log.d(TAG, path);
+    public void showFullscreenPhoto(GalleryItem currentItem) {
+
         photoView = findViewById(R.id.mainFullscreenImage);
-        info = imageInfo;
-        Bitmap bitmap = BitmapFactory.decodeFile(path);
+        info = currentItem.getInfo();
+        Bitmap bitmap = BitmapFactory.decodeFile(currentItem.getImagePath());
         if (bitmap != null) {
             photoView.setImageBitmap(bitmap);
             photoView.setAnimaDuring(200);
