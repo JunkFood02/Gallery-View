@@ -1,4 +1,4 @@
-package com.example.galleryview;
+package com.example.galleryview.model;
 
 import android.os.Build;
 import android.util.JsonWriter;
@@ -6,6 +6,8 @@ import android.util.Log;
 import android.webkit.WebSettings;
 
 import androidx.annotation.RequiresApi;
+
+import com.example.galleryview.MainActivity;
 
 import org.json.JSONArray;
 import org.json.JSONException;
