@@ -1,7 +1,5 @@
 package com.example.galleryview;
 
-import static com.example.galleryview.MainActivity.BOOK_TITLE;
-
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
@@ -24,6 +22,8 @@ import com.airbnb.lottie.LottieAnimationView;
 import com.bm.library.Info;
 import com.bm.library.PhotoView;
 import com.bumptech.glide.Glide;
+import com.example.galleryview.model.DatabaseUtils;
+import com.example.galleryview.model.GalleryItem;
 import com.example.galleryview.model.MyDatabaseHelper;
 
 import java.io.File;
@@ -137,9 +137,8 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
     @Override
     public void onItemDelete(int position, ViewHolder holder) {
         GalleryItem currentItem = ItemList.get(position);
-        helper = new MyDatabaseHelper(MainActivity.getContext(), "Gallery.db", null, 1);
-        db = helper.getWritableDatabase();
-        db.delete(BOOK_TITLE, "id=?", new String[]{"" + currentItem.getId()});
+        Log.d(TAG, "onItemDelete: id = "+currentItem.getId());
+        DatabaseUtils.Delete(currentItem.getId());
         ItemList.remove(position);
         notifyItemRemoved(position);
         Message message = handler.obtainMessage(MainActivity.UNDO_REMOVE_IMAGE);

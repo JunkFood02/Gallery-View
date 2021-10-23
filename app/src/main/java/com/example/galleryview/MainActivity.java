@@ -1,35 +1,22 @@
 package com.example.galleryview;
 
 import android.Manifest;
-import android.content.ContentUris;
-import android.content.ContentValues;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
-import android.provider.ContactsContract;
-import android.provider.DocumentsContract;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
-import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -49,8 +36,9 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 import com.bm.library.Info;
 import com.bm.library.PhotoView;
 import com.example.galleryview.model.DatabaseUtils;
-import com.example.galleryview.model.HttpUtils;
-import com.example.galleryview.model.MyDatabaseHelper;
+import com.example.galleryview.model.GalleryItem;
+import com.example.galleryview.presenter.MainActivityInterface;
+import com.example.galleryview.presenter.MainActivityPresenter;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -58,14 +46,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-public class MainActivity extends MyActivity implements View.OnClickListener {
+public class MainActivity extends MyActivity implements View.OnClickListener,MainActivityInterface{
 
     ItemAdapter adapter;
     int operationCode = 0;
     Info info;
-    GalleryItem galleryItem = null;
     FloatingActionButton selectButton, clearAllButton;
-    Button uploadButton;
     DrawerLayout drawerLayout;
     List<GalleryItem> galleryItemList = new ArrayList<>();
     ActivityResultLauncher<Intent> launcher_album;
@@ -74,146 +60,87 @@ public class MainActivity extends MyActivity implements View.OnClickListener {
     ImageView imageView;
     List<String> strings = new ArrayList<>();
     Animation fadeIn, fadeOut;
-    SQLiteDatabase db;
     FrameLayout background;
-    MyDatabaseHelper helper;
     Toolbar toolbar;
     PhotoView photoView;
-    private int position;
+    MainActivityPresenter presenter;
     StaggeredGridLayoutManager layoutManager;
     public static final String BOOK_TITLE = "Gallery";
     private static final String TAG = "MainActivity";
     public static final int SHOW_FULLSCREEN_IMAGE = 1;
     public static final int UNDO_REMOVE_IMAGE = -1;
-    public Handler handler;
 
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP_MR1)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         try {
             init();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
+        } catch (ExecutionException | InterruptedException e) {
             e.printStackTrace();
         }
 
         launcher_album = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
-                new ActivityResultCallback<ActivityResult>() {
-                    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-                    @Override
-                    public void onActivityResult(ActivityResult result) {
-                        db = helper.getWritableDatabase();
-                        String imagePath = null;
-                        Log.d(TAG, "onActivityResult: ");
-                        boolean IS_IMAGE = true;
-                        if (result.getResultCode() == RESULT_OK) {
-
-                            assert result.getData() != null;
-                            Uri uri = Uri.parse(result.getData().toUri(Intent.URI_ALLOW_UNSAFE));
-                            IS_IMAGE = uri.toString().contains("image");
-                            Log.d(TAG, "uri :" + uri);
-                            if (DocumentsContract.isDocumentUri(MainActivity.this, uri)) {
-                                String docID = DocumentsContract.getDocumentId(uri);
-                                Log.d(TAG, "getDocumentId(uri) :" + docID);
-
-                                if ("com.android.providers.media.documents".equals(uri.getAuthority())) {
-                                    String id = docID.split(":")[1];
-                                    String selection = MediaStore.Images.Media._ID + "=" + id;
-                                    if (IS_IMAGE)
-                                        imagePath = getImagePath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, selection);
-                                    else
-                                        imagePath = getImagePath(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, selection);
-
-                                } else if ("com.android.providers.downloads.documents".equals(uri.getAuthority())) {
-                                    Uri contentUri = ContentUris.withAppendedId(Uri.parse("content://downloads/public_downloads"), Long.parseLong(docID));
-                                    if (IS_IMAGE)
-                                        imagePath = getImagePath(contentUri, null);
-                                    else
-                                        imagePath = getVideoPath(contentUri, null);
-                                }
-                            } else if ("content".equalsIgnoreCase(uri.getScheme())) {
-                                if (IS_IMAGE)
-                                    imagePath = getImagePath(uri, null);
-                                else
-                                    imagePath = getVideoPath(uri, null);
-                            } else if ("file".equalsIgnoreCase(uri.getScheme())) {
-                                imagePath = uri.getPath();
-                            }
-                        }
-                        //获取路径后
-                        if (imagePath != null) {
-                            if (IS_IMAGE)
-                                galleryItem = new GalleryItem(imagePath);
-                            else {
-                                galleryItem = new GalleryItem(imagePath, GalleryItem.TYPE_VIDEO);
-                                Toast.makeText(MainActivity.this, "Succeeded to get image path.", Toast.LENGTH_SHORT).show();
-                            }
-                            if (operationCode == 0) {
-                                ContentValues values = new ContentValues();
-                                values.put("imagepath", galleryItem.getImagePath());
-                                values.put("type", galleryItem.getType());
-                                values.put("liked", galleryItem.getIS_LIKED());
-                                recyclerView.scrollToPosition(0);
-                                long imageID = 0;
-                                try {
-                                    imageID = DatabaseUtils.Insert(values);
-                                } catch (ExecutionException | InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                                galleryItem.setId(imageID);
-                                adapter.addImage(galleryItem);
-                            } else {
-                                HttpUtils.postImage("1.jpg", imagePath);
-                            }
-                        } else {
-                            Toast.makeText(MainActivity.this, "Failed to get image path.", Toast.LENGTH_SHORT).show();
-                        }
+                result -> {
+                    Log.d(TAG, "onActivityResult: ");
+                    if (result.getResultCode() == RESULT_OK) {
+                        assert result.getData() != null;
+                        Uri uri = Uri.parse(result.getData().toUri(Intent.URI_ALLOW_UNSAFE));
+                        MainActivityPresenter.addNewImage(uri,operationCode);
                     }
                 });
     }
 
     @Override
+    public void insertNewImage(GalleryItem newItem) {
+        recyclerView.scrollToPosition(0);
+        adapter.addImage(newItem);
+    }
+
+    @Override
     protected void onDestroy() {
-        handler.removeCallbacksAndMessages(null);
+        presenter.getHandler().removeCallbacksAndMessages(null);
         super.onDestroy();
     }
 
     @Override
     public void finish() {
-        handler.removeCallbacksAndMessages(null);
+        presenter.getHandler().removeCallbacksAndMessages(null);
         super.finish();
     }
 
     @Override
     public void onClick(View v) {
+        final int selectButtonID=R.id.button2;
+        final int deleteButtonID=R.id.deleteButton;
         switch (v.getId()) {
-            case R.id.button2:
+            case selectButtonID:
                 operationCode = 0;
                 selectImage();
                 recyclerView.setAdapter(adapter);
                 break;
-            /*case R.id.uploadButton:
+            /* 上传按钮逻辑已被移除
+            case R.id.uploadButton:
                 operationCode = 1;
                 selectImage();
-                break;*/
-            case R.id.deleteButton:
+                break;
+                */
+            case deleteButtonID:
 
                 AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
                 dialog.setTitle("Remove All Images");
                 dialog.setMessage("Are you sure to remove all the images? " + "This operation cannot be withdrawn.");
                 dialog.setPositiveButton("Confirm", (dialog1, which) -> {
-                    helper.onClear(db);
+                    DatabaseUtils.Clear();
                     adapter.clearList();
                     Toast.makeText(this, "All images have been removed.", Toast.LENGTH_SHORT).show();
                 });
                 dialog.setNegativeButton("Cancel", (dialog12, which) -> {
-
                 });
                 dialog.show();
-                //recyclerView.setAdapter(adapter);
         }
     }
 
@@ -250,55 +177,17 @@ public class MainActivity extends MyActivity implements View.OnClickListener {
         return true;
     }
 
-    public String getImagePath(Uri uri, String selection) {
-        String path = null;
-        Cursor cursor = getContentResolver().query(uri, null, selection, null, null);
-        if (cursor != null) {
-            if (cursor.moveToNext()) {
-                path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
-            }
-            cursor.close();
-        }
-        return path;
+    private void LoadImages() throws ExecutionException, InterruptedException {
+        presenter.setAdapter(adapter);
+        presenter.readAlbumDataFromDatabase();
     }
 
-    public String getVideoPath(Uri uri, String selection) {
-        String path = null;
-        Cursor cursor = getContentResolver().query(uri, null, selection, null, null);
-        if (cursor != null) {
-            if (cursor.moveToNext()) {
-                path = cursor.getString(cursor.getColumnIndex(MediaStore.Video.Media.DATA));
-            }
-            cursor.close();
-        }
-        return path;
-    }
-
-    private void readAlbumDataFromDatabase() throws ExecutionException, InterruptedException {
-        recyclerView.setAdapter(adapter);
-        try (Cursor cursor = DatabaseUtils.Query()) {
-            assert cursor != null;
-            if (cursor.moveToFirst()) {
-                do {
-                    String imagePath = cursor.getString(cursor.getColumnIndex("imagepath"));
-                    int type = cursor.getInt(cursor.getColumnIndex("type"));
-                    long id = cursor.getLong(cursor.getColumnIndex("id"));
-                    int is_liked = cursor.getInt(cursor.getColumnIndex("liked"));
-                    GalleryItem galleryItem = new GalleryItem(imagePath, type, id, is_liked);
-                    Log.d(TAG, "id: " + id);
-                    adapter.addImage(galleryItem);
-                } while (cursor.moveToNext());
-            }
-            cursor.close();
-        }
-
-    }
 
     private void init() throws ExecutionException, InterruptedException {
-        helper = new MyDatabaseHelper(this, "Gallery.db", null, 1);
         recyclerView = findViewById(R.id.galleryRecyclerView);
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar = findViewById(R.id.toolbar);
         drawerLayout = findViewById(R.id.drawerLayout);
+        presenter=new MainActivityPresenter(this);
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
@@ -314,76 +203,41 @@ public class MainActivity extends MyActivity implements View.OnClickListener {
         imageView = findViewById(R.id.imageView);
         fadeIn = new AlphaAnimation(0.0f, 0.9f);
         fadeOut = new AlphaAnimation(0.9f, 0.0f);
-        //uploadButton = findViewById(R.id.uploadButton);
         coordinatorLayout = findViewById(R.id.CoordinatorLayout);
         clearAllButton = findViewById(R.id.deleteButton);
-        //uploadButton.setOnClickListener(this);
         selectButton.setOnClickListener(this);
         selectButton.setLongClickable(true);
-        selectButton.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                Snackbar.make(selectButton, "You've long pressed this button.", Snackbar.LENGTH_SHORT).show();
-                return true;
-            }
+        selectButton.setOnLongClickListener(v -> {
+            Snackbar.make(selectButton, "You've long pressed this button.", Snackbar.LENGTH_SHORT).show();
+            return true;
         });
         clearAllButton.setOnClickListener(this);
-        setupHandler();
-        adapter = new ItemAdapter(galleryItemList, handler);
+        adapter = new ItemAdapter(galleryItemList, presenter.getHandler());
         ItemTouchHelper.Callback callback = new MyItemTouchHelperCallBack(adapter);
         ItemTouchHelper touchHelper = new ItemTouchHelper(callback);
         touchHelper.attachToRecyclerView(recyclerView);
-        readAlbumDataFromDatabase();
+        recyclerView.setAdapter(adapter);
+        LoadImages();
         strings.add("Upload this image");
         strings.add("Delete this image");
+        fadeIn.setDuration(photoView.getAnimaDuring());
+        fadeOut.setDuration(photoView.getAnimaDuring());
     }
 
-    private void setupHandler() {
-        handler = new Handler(getMainLooper()) {
-            @Override
-            public void handleMessage(@NonNull Message msg) {
-                super.handleMessage(msg);
-                switch (msg.what) {
-                    case SHOW_FULLSCREEN_IMAGE:
-                        position = msg.arg1;
-                        galleryItem = (GalleryItem) msg.obj;
-                        info = galleryItem.getInfo();
-                        showFullscreenPhoto(galleryItem.getImagePath(), info);
-                        break;
-                    case UNDO_REMOVE_IMAGE:
-                        galleryItem = (GalleryItem) msg.obj;
-                        position = msg.arg1;
-                        undoRemove(galleryItem, position);
-                        break;
-                }
-            }
-        };
-    }
 
-    public void undoRemove(GalleryItem currentItem, int position) {
-        this.position = position;
+    @Override
+    public void showUndoRemoveSnackbar(GalleryItem item, int Position) {
         Snackbar.make(selectButton, "Image removed.", Snackbar.LENGTH_SHORT)
                 .setAction("Undo", v -> {
-                    new Thread(() -> {
-                        ContentValues values = new ContentValues();
-                        values.put("imagepath", currentItem.getImagePath());
-                        values.put("type", currentItem.getType());
-                        values.put("liked", currentItem.getIS_LIKED());
-                        long imageID = 0;
-                        try {
-                            imageID = DatabaseUtils.Insert(values);
-                        } catch (ExecutionException e) {
-                            e.printStackTrace();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        currentItem.setId(imageID);
-                    }).start();
-                    adapter.insertImage(currentItem, position);
-                    recyclerView.scrollToPosition(position);
+                    adapter.insertImage(item, Position);
+                    MainActivityPresenter.reAddItem(item);
+                    recyclerView.scrollToPosition(Position);
                 })
                 .show();
     }
+
+
+
 
     public void showFullscreenPhoto(String path, Info imageInfo) {
         Log.d(TAG, path);
@@ -396,7 +250,7 @@ public class MainActivity extends MyActivity implements View.OnClickListener {
             photoView.setAnimaDuring(200);
             photoView.setOnLongClickListener(v -> {
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                builder.setItems(strings.toArray(new String[0]), (DialogInterface.OnClickListener) (dialog, which) -> {
+                builder.setItems(strings.toArray(new String[0]), (dialog, which) -> {
                     switch (which) {
                         case 0:
                             Toast.makeText(MainActivity.this, "Upload", Toast.LENGTH_SHORT).show();
@@ -440,14 +294,11 @@ public class MainActivity extends MyActivity implements View.OnClickListener {
         else {
             super.onBackPressed();
         }
-
-
     }
 
     public void backgroundChange() {
 
-        fadeIn.setDuration(photoView.getAnimaDuring());
-        fadeOut.setDuration(photoView.getAnimaDuring());
+
         if (background.getVisibility() == View.INVISIBLE) {
             background.setVisibility(View.VISIBLE);
             background.startAnimation(fadeIn);
@@ -456,4 +307,6 @@ public class MainActivity extends MyActivity implements View.OnClickListener {
             background.setVisibility(View.INVISIBLE);
         }
     }
+
+
 }

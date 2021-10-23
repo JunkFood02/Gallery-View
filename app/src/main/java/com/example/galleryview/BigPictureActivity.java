@@ -5,9 +5,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
@@ -15,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.bm.library.PhotoView;
+import com.example.galleryview.model.GalleryItem;
 
 public class BigPictureActivity extends AppCompatActivity implements View.OnClickListener {
     VideoView videoView;
