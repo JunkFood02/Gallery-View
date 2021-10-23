@@ -15,6 +15,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.ContactsContract;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -47,12 +48,15 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import com.bm.library.Info;
 import com.bm.library.PhotoView;
+import com.example.galleryview.model.DatabaseUtils;
+import com.example.galleryview.model.HttpUtils;
+import com.example.galleryview.model.MyDatabaseHelper;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends MyActivity implements View.OnClickListener {
 
@@ -87,7 +91,13 @@ public class MainActivity extends MyActivity implements View.OnClickListener {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        init();
+        try {
+            init();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         launcher_album = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
@@ -101,6 +111,7 @@ public class MainActivity extends MyActivity implements View.OnClickListener {
                         boolean IS_IMAGE = true;
                         if (result.getResultCode() == RESULT_OK) {
 
+                            assert result.getData() != null;
                             Uri uri = Uri.parse(result.getData().toUri(Intent.URI_ALLOW_UNSAFE));
                             IS_IMAGE = uri.toString().contains("image");
                             Log.d(TAG, "uri :" + uri);
@@ -146,7 +157,12 @@ public class MainActivity extends MyActivity implements View.OnClickListener {
                                 values.put("type", galleryItem.getType());
                                 values.put("liked", galleryItem.getIS_LIKED());
                                 recyclerView.scrollToPosition(0);
-                                long imageID = db.insert(BOOK_TITLE, null, values);
+                                long imageID = 0;
+                                try {
+                                    imageID = DatabaseUtils.Insert(values);
+                                } catch (ExecutionException | InterruptedException e) {
+                                    e.printStackTrace();
+                                }
                                 galleryItem.setId(imageID);
                                 adapter.addImage(galleryItem);
                             } else {
@@ -258,27 +274,27 @@ public class MainActivity extends MyActivity implements View.OnClickListener {
         return path;
     }
 
-    private void readAlbumDataFromDatabase() {
+    private void readAlbumDataFromDatabase() throws ExecutionException, InterruptedException {
         recyclerView.setAdapter(adapter);
-        db = helper.getReadableDatabase();
-        Cursor cursor;
-        cursor = db.query(BOOK_TITLE, null, null, null, null, null, null);
-        if (cursor.moveToFirst()) {
-            do {
-                String imagePath = cursor.getString(cursor.getColumnIndex("imagepath"));
-                int type = cursor.getInt(cursor.getColumnIndex("type"));
-                long id = cursor.getLong(cursor.getColumnIndex("id"));
-                int is_liked = cursor.getInt(cursor.getColumnIndex("liked"));
-                GalleryItem galleryItem = new GalleryItem(imagePath, type, id, is_liked);
-                Log.d(TAG, "id: " + id);
-                adapter.addImage(galleryItem);
-            } while (cursor.moveToNext());
+        try (Cursor cursor = DatabaseUtils.Query()) {
+            assert cursor != null;
+            if (cursor.moveToFirst()) {
+                do {
+                    String imagePath = cursor.getString(cursor.getColumnIndex("imagepath"));
+                    int type = cursor.getInt(cursor.getColumnIndex("type"));
+                    long id = cursor.getLong(cursor.getColumnIndex("id"));
+                    int is_liked = cursor.getInt(cursor.getColumnIndex("liked"));
+                    GalleryItem galleryItem = new GalleryItem(imagePath, type, id, is_liked);
+                    Log.d(TAG, "id: " + id);
+                    adapter.addImage(galleryItem);
+                } while (cursor.moveToNext());
+            }
+            cursor.close();
         }
-        cursor.close();
 
     }
 
-    private void init() {
+    private void init() throws ExecutionException, InterruptedException {
         helper = new MyDatabaseHelper(this, "Gallery.db", null, 1);
         recyclerView = findViewById(R.id.galleryRecyclerView);
         toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -345,7 +361,6 @@ public class MainActivity extends MyActivity implements View.OnClickListener {
     }
 
     public void undoRemove(GalleryItem currentItem, int position) {
-        db = helper.getWritableDatabase();
         this.position = position;
         Snackbar.make(selectButton, "Image removed.", Snackbar.LENGTH_SHORT)
                 .setAction("Undo", v -> {
@@ -354,7 +369,14 @@ public class MainActivity extends MyActivity implements View.OnClickListener {
                         values.put("imagepath", currentItem.getImagePath());
                         values.put("type", currentItem.getType());
                         values.put("liked", currentItem.getIS_LIKED());
-                        long imageID = db.insert(BOOK_TITLE, null, values);
+                        long imageID = 0;
+                        try {
+                            imageID = DatabaseUtils.Insert(values);
+                        } catch (ExecutionException e) {
+                            e.printStackTrace();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                         currentItem.setId(imageID);
                     }).start();
                     adapter.insertImage(currentItem, position);

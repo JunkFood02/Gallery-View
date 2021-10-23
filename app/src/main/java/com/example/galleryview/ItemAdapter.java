@@ -24,6 +24,7 @@ import com.airbnb.lottie.LottieAnimationView;
 import com.bm.library.Info;
 import com.bm.library.PhotoView;
 import com.bumptech.glide.Glide;
+import com.example.galleryview.model.MyDatabaseHelper;
 
 import java.io.File;
 import java.util.ArrayList;
