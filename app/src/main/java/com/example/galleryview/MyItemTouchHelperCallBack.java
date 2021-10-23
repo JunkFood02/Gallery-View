@@ -1,14 +1,11 @@
 package com.example.galleryview;
 
-import android.util.Log;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class MyItemTouchHelperCallBack extends ItemTouchHelper.Callback {
-    private static final String TAG = "MyItemTouchHelperCallBa";
-    private ItemTouchHelperAdapter adapter;
+    private final ItemTouchHelperAdapter adapter;
 
     public MyItemTouchHelperCallBack(ItemTouchHelperAdapter adapter) {
         this.adapter = adapter;

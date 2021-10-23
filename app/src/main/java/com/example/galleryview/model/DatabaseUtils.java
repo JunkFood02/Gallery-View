@@ -7,6 +7,8 @@ import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
+import android.widget.HeterogeneousExpandableList;
 
 import androidx.annotation.Nullable;
 
@@ -22,34 +24,23 @@ import java.util.concurrent.Future;
 import javax.security.auth.callback.Callback;
 
 public class DatabaseUtils {
-   private static ExecutorService exec = Executors.newCachedThreadPool();
-
-    static class MyThread<T> extends Thread {
-        T data;
-
-        public MyThread(T data) {
-            this.data = data;
-        }
-
-        void updateData(T data) {
-            this.data = data;
-        }
-    }
+    private static final ExecutorService exec = Executors.newCachedThreadPool();
+    private static final String TAG = "DatabaseUtils";
 
     @SuppressLint("StaticFieldLeak")
     private static final MyDatabaseHelper helper = new MyDatabaseHelper(MainActivity.context, "Gallery.db", null, 1);
-    private static final SQLiteDatabase rdb = helper.getReadableDatabase();
-    private static final SQLiteDatabase wdb = helper.getWritableDatabase();
+    private static SQLiteDatabase rdb = helper.getReadableDatabase();
+    private static SQLiteDatabase wdb = helper.getWritableDatabase();
 
     public static void Update(long id, ContentValues values) {
         new Thread(() -> wdb.update(BOOK_TITLE, values, "id=?", new String[]{"" + id})).start();
     }
 
     public static long Insert(ContentValues values) throws ExecutionException, InterruptedException {
-
-        long id = 0;
+        long id;
         Future<Long> future = exec.submit(() -> wdb.insert(BOOK_TITLE, null, values));
         id = future.get();
+        Log.d(TAG, "Insert: id = " + id);
         return id;
     }
 
@@ -58,5 +49,22 @@ public class DatabaseUtils {
         Future<Cursor> future = exec.submit(() -> rdb.query(BOOK_TITLE, null, null, null, null, null, null));
         cursor = future.get();
         return cursor;
+    }
+
+    public static void Delete(long id) {
+        Log.d(TAG, "Delete: id = " + id);
+        wdb.delete(BOOK_TITLE, "id=?", new String[]{"" + id});
+    }
+
+    private static void writableInit() {
+        wdb = helper.getWritableDatabase();
+    }
+
+    private static void readableInit() {
+        rdb = helper.getReadableDatabase();
+    }
+    public static void Clear()
+    {
+        helper.onClear(rdb);
     }
 }
