@@ -1,49 +1,34 @@
-package com.example.galleryview;
-
-import static com.example.galleryview.MyActivity.context;
-import static com.example.galleryview.MyActivity.getContext;
+package com.example.galleryview.ui;
 
 import android.animation.Animator;
 import android.annotation.SuppressLint;
-import android.media.MediaPlayer;
-import android.net.Uri;
-import android.os.Build;
 import android.util.Log;
-import android.view.GestureDetector;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.MediaController;
-import android.widget.VideoView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.airbnb.lottie.LottieAnimationView;
+import com.example.galleryview.R;
+import com.example.galleryview.presenter.VideoController;
 import com.example.galleryview.model.GalleryItem;
 import com.example.galleryview.presenter.SwipeVideoPlayPresenter;
-import com.google.android.exoplayer2.DefaultLoadControl;
-import com.google.android.exoplayer2.DefaultRenderersFactory;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
-import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
-import com.google.android.exoplayer2.extractor.ExtractorsFactory;
-import com.google.android.exoplayer2.source.BaseMediaSource;
-import com.google.android.exoplayer2.source.MediaSource;
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.ui.PlayerControlView;
 import com.google.android.exoplayer2.ui.PlayerView;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 public class FullScreenVideoAdapter extends RecyclerView.Adapter<FullScreenVideoAdapter.ViewHolder> {
     SwipeVideoPlayPresenter presenter;
@@ -66,18 +51,25 @@ public class FullScreenVideoAdapter extends RecyclerView.Adapter<FullScreenVideo
         controllers.put(Position, holder);
         GalleryItem currentItem = itemList.get(Position);
         holder.videoView.setPlayer(holder.player);
+        holder.videoTitle.setText("视频标题 " + (getItemCount() - Position - 1));
+        holder.updateHeartCount(currentItem.getIS_LIKED());
         MediaItem mediaItem = MediaItem.fromUri(currentItem.getImagePath());
         holder.player.setMediaItem(mediaItem);
         holder.player.setPlayWhenReady(position == presenter.getActivePosition());
         holder.player.prepare();
-        holder.controlView.setPlayer(holder.player);
+        holder.player.seekTo(100);
         holder.player.addListener(new Player.Listener() {
             @Override
             public void onPlaybackStateChanged(int playbackState) {
                 if (playbackState == ExoPlayer.STATE_ENDED)
                     presenter.swipeToNextVideo(Position);
+                else if (playbackState == ExoPlayer.STATE_READY) {
+                    holder.controlView.setPlayer(holder.player);
+                }
             }
         });
+
+
         /*
         holder.mediaController=new MediaController(holder.itemView.getContext());
         holder.mediaController.setMediaPlayer(holder.videoView);
@@ -93,9 +85,20 @@ public class FullScreenVideoAdapter extends RecyclerView.Adapter<FullScreenVideo
 
         holder.itemView.setOnClickListener(new onDoubleClickListener() {
             @Override
+            public void onClick(View v) {
+                super.onClick(v);
+                if (!holder.controlView.isVisible())
+                    holder.controlView.show();
+            }
+
+            @Override
             public void onDoubleClick() {
-                holder.lottieAnimationView.playAnimation();
-                holder.lottieAnimationView.setVisibility(View.VISIBLE);
+                holder.heartAnimationLarge.playAnimation();
+                holder.heartAnimationSmall.playAnimation();
+                holder.heartAnimationLarge.setVisibility(View.VISIBLE);
+                currentItem.doubleClickLike();
+                holder.updateHeartCount(currentItem.getIS_LIKED());
+
             }
         });
 
@@ -120,6 +123,14 @@ public class FullScreenVideoAdapter extends RecyclerView.Adapter<FullScreenVideo
 
     }
 
+    public void VideoRestart(int position) {
+        if (controllers.get(position) != null) {
+            Log.d(TAG, "VideoStart: position = " + position);
+            Objects.requireNonNull(controllers.get(position)).noticeVideoRestart();
+        }
+
+    }
+
     public void VideoStop() {
         for (int i = 0; i <= getItemCount(); i++)
             if (controllers.containsKey(i))
@@ -128,34 +139,40 @@ public class FullScreenVideoAdapter extends RecyclerView.Adapter<FullScreenVideo
 
     static class ViewHolder extends RecyclerView.ViewHolder implements VideoController {
         PlayerView videoView;
-        LottieAnimationView lottieAnimationView;
+        LottieAnimationView heartAnimationLarge, heartAnimationSmall;
         FrameLayout frameLayout;
         MediaController mediaController;
         SimpleExoPlayer player;
         PlayerControlView controlView;
+        TextView textView, videoTitle;
+
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             videoView = itemView.findViewById(R.id.VideoPlayView);
+            textView = itemView.findViewById(R.id.heartCountText);
             frameLayout = itemView.findViewById(R.id.VideoFrame);
             player = new SimpleExoPlayer.Builder(itemView.getContext()).build();
-            controlView= itemView.findViewById(R.id.controlView);
-            lottieAnimationView = itemView.findViewById(R.id.doubleClickAnimation);
-            lottieAnimationView.setScaleX((float) 5);
-            lottieAnimationView.setScaleY((float) 5);
-            lottieAnimationView.setAnimation("heart.json");
-            lottieAnimationView.setVisibility(View.INVISIBLE);
-            lottieAnimationView.addAnimatorListener(new Animator.AnimatorListener() {
+            videoTitle = itemView.findViewById(R.id.videoTitle);
+            controlView = itemView.findViewById(R.id.controlView);
+            heartAnimationLarge = itemView.findViewById(R.id.doubleClickAnimation);
+            heartAnimationSmall = itemView.findViewById(R.id.heartAnimationSmall);
+            heartAnimationLarge.setScaleX((float) 2);
+            heartAnimationLarge.setScaleY((float) 2);
+            heartAnimationLarge.setSpeed((float) 1);
+            heartAnimationLarge.setVisibility(View.INVISIBLE);
+            heartAnimationLarge.addAnimatorListener(new Animator.AnimatorListener() {
                 @Override
                 public void onAnimationStart(Animator animation) {
                 }
 
                 @Override
                 public void onAnimationEnd(Animator animation) {
-                    lottieAnimationView.setVisibility(View.INVISIBLE);
+                    heartAnimationLarge.setVisibility(View.INVISIBLE);
                 }
 
                 @Override
                 public void onAnimationCancel(Animator animation) {
+                    heartAnimationLarge.setVisibility(View.INVISIBLE);
                 }
 
                 @Override
@@ -165,19 +182,32 @@ public class FullScreenVideoAdapter extends RecyclerView.Adapter<FullScreenVideo
 
         }
 
+        public void updateHeartCount(int cnt) {
+            textView.setText("" + cnt);
+        }
+
         @Override
         public void noticeVideoStop() {
-            player.stop();
+            player.pause();
+        }
+
+        public void noticeVideoRestart() {
+            player.play();
         }
 
         public void noticeVideoStart() {
             player.prepare();
-            player.seekTo(0);
+            player.seekTo(100);
             player.play();
         }
+
     }
 
     public void addVideo(GalleryItem item) {
         itemList.add(item);
+    }
+
+    public void setItemList(List<GalleryItem> itemList) {
+        this.itemList = itemList;
     }
 }

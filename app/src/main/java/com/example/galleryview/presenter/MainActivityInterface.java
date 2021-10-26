@@ -10,4 +10,5 @@ public interface MainActivityInterface {
 
     void showUndoRemoveSnackbar(GalleryItem item, int Position);
 
+    void showFilterChooseDialog(CharSequence[] items, boolean[] checkedItems,long videoID);
 }

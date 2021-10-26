@@ -1,4 +1,4 @@
-package com.example.galleryview;
+package com.example.galleryview.ui;
 
 import com.example.galleryview.ui.ItemAdapter;
 

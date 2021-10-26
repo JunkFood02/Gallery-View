@@ -11,25 +11,28 @@ public class MyDatabaseHelper extends SQLiteOpenHelper {
             + "liked integer, "
             + "type integer)";
 
-    private Context context;
+    public static final String CREATE_FILTER_BOOK = "create table Filters  ("
+            + "id integer primary key autoincrement, "
+            + "labelid int, "
+            + "galleryid int)";
 
     public MyDatabaseHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
         super(context, name, factory, version);
-        this.context = context;
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(CREATE_BOOK);
+        db.execSQL(CREATE_FILTER_BOOK);
     }
+
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("drop table if exists Gallery");
-        onCreate(db);
     }
-    public void onClear(SQLiteDatabase db)
-    {
+
+    public void onClear(SQLiteDatabase db) {
         db.execSQL("drop table if exists Gallery");
+        db.execSQL("drop table if exists Filters");
         onCreate(db);
     }
 }

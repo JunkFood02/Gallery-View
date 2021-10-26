@@ -1,6 +1,7 @@
 package com.example.galleryview.model;
 
 import static com.example.galleryview.MainActivity.BOOK_TITLE;
+import static com.example.galleryview.MainActivity.FILTER_BOOL_TITLE;
 import static com.example.galleryview.MyActivity.context;
 
 import android.annotation.SuppressLint;
@@ -9,12 +10,21 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 import android.widget.HeterogeneousExpandableList;
+import android.widget.ListView;
 
 import androidx.annotation.Nullable;
+import androidx.room.Room;
 
+import com.airbnb.lottie.L;
 import com.example.galleryview.MainActivity;
 import com.example.galleryview.R;
+import com.example.galleryview.dao.AppDatabase;
+import com.example.galleryview.dao.LabelRecord;
+import com.example.galleryview.dao.Video;
+import com.example.galleryview.dao.VideoBookDao;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -23,48 +33,116 @@ import java.util.concurrent.Future;
 
 import javax.security.auth.callback.Callback;
 
+import kotlin.jvm.Synchronized;
+
 public class DatabaseUtils {
     private static final ExecutorService exec = Executors.newCachedThreadPool();
     private static final String TAG = "DatabaseUtils";
+    public static AppDatabase appDatabase = Room.databaseBuilder(context, AppDatabase.class, "app_database")
+            .build();
+    public static VideoBookDao dao = appDatabase.dao();
 
     @SuppressLint("StaticFieldLeak")
-    private static final MyDatabaseHelper helper = new MyDatabaseHelper(MainActivity.context, "Gallery.db", null, 1);
-    private static SQLiteDatabase rdb = helper.getReadableDatabase();
-    private static SQLiteDatabase wdb = helper.getWritableDatabase();
 
-    public static void Update(long id, ContentValues values) {
-        new Thread(() -> wdb.update(BOOK_TITLE, values, "id=?", new String[]{"" + id})).start();
-    }
 
-    public static long Insert(ContentValues values) throws ExecutionException, InterruptedException {
-        long id;
-        Future<Long> future = exec.submit(() -> wdb.insert(BOOK_TITLE, null, values));
-        id = future.get();
-        Log.d(TAG, "Insert: id = " + id);
+    public static long insertVideo(Video video) {
+        Future<Long> future = exec.submit(() -> dao.insertVideo(video));
+        long id = 0;
+        try {
+            id = future.get();
+        } catch (ExecutionException | InterruptedException e) {
+            e.printStackTrace();
+        }
         return id;
     }
 
-    public static Cursor Query() throws ExecutionException, InterruptedException {
-        Cursor cursor;
-        Future<Cursor> future = exec.submit(() -> rdb.query(BOOK_TITLE, null, null, null, null, null, null));
-        cursor = future.get();
-        return cursor;
+    public static void insertLabel(int labelID, long videoID) {
+        new Thread(() -> dao.insertLabel(new LabelRecord(labelID, videoID))).start();
+
     }
 
-    public static void Delete(long id) {
-        Log.d(TAG, "Delete: id = " + id);
-        wdb.delete(BOOK_TITLE, "id=?", new String[]{"" + id});
+    public static void Update(Video video) {
+        new Thread(() -> dao.updateVideo(video)).start();
     }
 
-    private static void writableInit() {
-        wdb = helper.getWritableDatabase();
+    public static List<Video> getAllVideoFromRoom() {
+        List<Video> videos = new ArrayList<>();
+        Future<List<Video>> future = exec.submit(new Callable<List<Video>>() {
+            @Override
+            public List<Video> call() throws Exception {
+                return dao.getAllVideos();
+            }
+        });
+        try {
+            videos = future.get();
+        } catch (ExecutionException | InterruptedException e) {
+            e.printStackTrace();
+        }
+        return videos;
     }
 
-    private static void readableInit() {
-        rdb = helper.getReadableDatabase();
+    public static void clearAllDataInRoom() {
+        new Thread(() -> {
+            dao.deleteAllVideo();
+            dao.deleteAllLabel();
+        }).start();
+
     }
-    public static void Clear()
-    {
-        helper.onClear(rdb);
+
+    public static void deleteVideoByID(long id) {
+        new Thread(() -> dao.deleteVideoByID(id)).start();
     }
+
+    public static boolean[] findCheckedLabelsByVideoId(int labelNumbers, long videoID) {
+        List<LabelRecord> labelRecords = new ArrayList<>();
+        boolean[] checkedItems = new boolean[labelNumbers];
+        Future<List<LabelRecord>> future = exec.submit(() -> dao.getAllLabelRecordByVideoID(videoID));
+        try {
+            labelRecords = future.get();
+        } catch (ExecutionException | InterruptedException e) {
+            e.printStackTrace();
+        }
+        for (LabelRecord r : labelRecords
+        ) {
+            Log.d(TAG, "findCheckedLabelsByVideoId: labelID= " + r.LabelId);
+            checkedItems[r.LabelId] = true;
+        }
+        return checkedItems;
+    }
+
+    public static void cleanLabelsByVideoID(long videoID) {
+        new Thread(() -> {
+            dao.clearLabelByVideoID(videoID);
+        }).start();
+    }
+
+    public static void insertLabels(boolean[] checkedLabels, long videoID) {
+        new Thread(() -> {
+
+            for (int i = 0; i < checkedLabels.length; i++) {
+                if (checkedLabels[i]) {
+                    Log.d(TAG, "insertLabel: for video " + videoID + ", Label " + i + " is checked!");
+                    dao.insertLabel(new LabelRecord(i, videoID));
+                } else {
+                    dao.deleteSpecificLabelByID(videoID, i);
+                }
+
+            }
+        }).start();
+
+
+    }
+
+    public static List<Video> getAllVideosByLabelIDs(List<Long> ids) {
+        List<Video> videos = new ArrayList<>();
+        Future<List<Video>> future = exec.submit(() -> dao.getAllVideoByVideoIDs(dao.getAllVideoIDByLabelIds(ids)));
+        try {
+            videos = future.get();
+        } catch (ExecutionException | InterruptedException e) {
+            e.printStackTrace();
+        }
+        return videos;
+    }
+
+
 }

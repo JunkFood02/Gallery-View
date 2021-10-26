@@ -1,4 +1,4 @@
-package com.example.galleryview;
+package com.example.galleryview.ui;
 
 import android.os.SystemClock;
 import android.view.MotionEvent;

@@ -1,6 +1,7 @@
 package com.example.galleryview;
 
 import android.Manifest;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -8,6 +9,8 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -15,6 +18,7 @@ import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -35,10 +39,11 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import com.bm.library.Info;
 import com.bm.library.PhotoView;
-import com.example.galleryview.model.DatabaseUtils;
 import com.example.galleryview.model.GalleryItem;
 import com.example.galleryview.presenter.MainActivityInterface;
 import com.example.galleryview.presenter.MainActivityPresenter;
+import com.example.galleryview.ui.ItemAdapter;
+import com.example.galleryview.ui.MyItemTouchHelperCallBack;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -46,17 +51,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-public class MainActivity extends MyActivity implements View.OnClickListener,MainActivityInterface{
+public class MainActivity extends MyActivity implements View.OnClickListener, MainActivityInterface {
 
-    ItemAdapter adapter;
+
     int operationCode = 0;
     Info info;
-    FloatingActionButton selectButton, clearAllButton;
+    FloatingActionButton selectButton, clearAllButton, filterButton;
     DrawerLayout drawerLayout;
-    List<GalleryItem> galleryItemList = new ArrayList<>();
     ActivityResultLauncher<Intent> launcher_album;
     RecyclerView recyclerView;
     CoordinatorLayout coordinatorLayout;
+    ListView listView;
     ImageView imageView;
     List<String> strings = new ArrayList<>();
     Animation fadeIn, fadeOut;
@@ -66,8 +71,10 @@ public class MainActivity extends MyActivity implements View.OnClickListener,Mai
     MainActivityPresenter presenter;
     StaggeredGridLayoutManager layoutManager;
     public static final String BOOK_TITLE = "Gallery";
+    public static final String FILTER_BOOL_TITLE = "Filters";
     private static final String TAG = "MainActivity";
     public static final int SHOW_FULLSCREEN_IMAGE = 1;
+    public static final int SHOW_FILTER_CHOOSE_DIALOG = 2;
     public static final int UNDO_REMOVE_IMAGE = -1;
 
 
@@ -89,7 +96,7 @@ public class MainActivity extends MyActivity implements View.OnClickListener,Mai
                     if (result.getResultCode() == RESULT_OK) {
                         assert result.getData() != null;
                         Uri uri = Uri.parse(result.getData().toUri(Intent.URI_ALLOW_UNSAFE));
-                        MainActivityPresenter.addNewImage(uri,operationCode);
+                        MainActivityPresenter.addNewImage(uri, operationCode);
                     }
                 });
     }
@@ -97,30 +104,31 @@ public class MainActivity extends MyActivity implements View.OnClickListener,Mai
     @Override
     public void insertNewImage(GalleryItem newItem) {
         recyclerView.scrollToPosition(0);
-        adapter.addImage(newItem);
+        presenter.getAdapter().addImage(newItem);
     }
 
     @Override
     protected void onDestroy() {
-        presenter.getHandler().removeCallbacksAndMessages(null);
+        presenter = null;
         super.onDestroy();
     }
 
     @Override
     public void finish() {
         presenter.getHandler().removeCallbacksAndMessages(null);
+        presenter = null;
         super.finish();
     }
 
     @Override
     public void onClick(View v) {
-        final int selectButtonID=R.id.button2;
-        final int deleteButtonID=R.id.deleteButton;
+        final int selectButtonID = R.id.button2;
+        final int deleteButtonID = R.id.deleteButton;
+        final int filterButtonID = R.id.filterButton;
         switch (v.getId()) {
             case selectButtonID:
-                operationCode = 0;
+                operationCode = 1;
                 selectImage();
-                recyclerView.setAdapter(adapter);
                 break;
             /* 上传按钮逻辑已被移除
             case R.id.uploadButton:
@@ -128,15 +136,26 @@ public class MainActivity extends MyActivity implements View.OnClickListener,Mai
                 selectImage();
                 break;
                 */
+            case filterButtonID:
+                boolean[] checkedItems = presenter.getShowLabels();
+                AlertDialog.Builder builder = new AlertDialog.Builder(this).setTitle("Choose labels to show").
+                        setMultiChoiceItems(presenter.getLabels(), checkedItems, (dialog, which, isChecked) -> {
+                        }).setPositiveButton("Apply", (dialog, which) -> {
+                            presenter.updateLabels(checkedItems, 0);
+                            presenter.reArrangeAdapter(checkedItems);
+                        }).setNegativeButton("Cancel", (dialog, which) -> {
+                });
+                builder.show();
+                break;
             case deleteButtonID:
-
                 AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
-                dialog.setTitle("Remove All Images");
-                dialog.setMessage("Are you sure to remove all the images? " + "This operation cannot be withdrawn.");
+                dialog.setTitle("Remove All Videos");
+                dialog.setMessage("Are you sure to remove all the videos? " + "This operation cannot be withdrawn.");
                 dialog.setPositiveButton("Confirm", (dialog1, which) -> {
-                    DatabaseUtils.Clear();
-                    adapter.clearList();
+                    presenter.clearAll();
+                    presenter.getAdapter().clearList();
                     Toast.makeText(this, "All images have been removed.", Toast.LENGTH_SHORT).show();
+                    clearAllButton.setVisibility(View.INVISIBLE);
                 });
                 dialog.setNegativeButton("Cancel", (dialog12, which) -> {
                 });
@@ -178,8 +197,8 @@ public class MainActivity extends MyActivity implements View.OnClickListener,Mai
     }
 
     private void LoadImages() throws ExecutionException, InterruptedException {
-        presenter.setAdapter(adapter);
-        presenter.readAlbumDataFromDatabase();
+        //presenter.readAlbumDataFromDatabase();
+        presenter.readAlbumDataFromRoomDatabase();
     }
 
 
@@ -187,7 +206,7 @@ public class MainActivity extends MyActivity implements View.OnClickListener,Mai
         recyclerView = findViewById(R.id.galleryRecyclerView);
         toolbar = findViewById(R.id.toolbar);
         drawerLayout = findViewById(R.id.drawerLayout);
-        presenter=new MainActivityPresenter(this);
+        presenter = new MainActivityPresenter(this);
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
@@ -199,6 +218,7 @@ public class MainActivity extends MyActivity implements View.OnClickListener,Mai
         layoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(layoutManager);
         selectButton = findViewById(R.id.button2);
+        filterButton = findViewById(R.id.filterButton);
         photoView = findViewById(R.id.mainFullscreenImage);
         imageView = findViewById(R.id.imageView);
         fadeIn = new AlphaAnimation(0.0f, 0.9f);
@@ -206,17 +226,19 @@ public class MainActivity extends MyActivity implements View.OnClickListener,Mai
         coordinatorLayout = findViewById(R.id.CoordinatorLayout);
         clearAllButton = findViewById(R.id.deleteButton);
         selectButton.setOnClickListener(this);
+        filterButton.setOnClickListener(this);
         selectButton.setLongClickable(true);
         selectButton.setOnLongClickListener(v -> {
             Snackbar.make(selectButton, "You've long pressed this button.", Snackbar.LENGTH_SHORT).show();
+            clearAllButton.setVisibility(View.VISIBLE);
             return true;
         });
         clearAllButton.setOnClickListener(this);
-        adapter = new ItemAdapter(galleryItemList, presenter.getHandler());
-        ItemTouchHelper.Callback callback = new MyItemTouchHelperCallBack(adapter);
+        presenter.setAdapter(new ItemAdapter(presenter.getGalleryItemList(), presenter.getHandler()));
+        ItemTouchHelper.Callback callback = new MyItemTouchHelperCallBack(presenter.getAdapter());
         ItemTouchHelper touchHelper = new ItemTouchHelper(callback);
         touchHelper.attachToRecyclerView(recyclerView);
-        recyclerView.setAdapter(adapter);
+        recyclerView.setAdapter(presenter.getAdapter());
         LoadImages();
         strings.add("Upload this image");
         strings.add("Delete this image");
@@ -229,16 +251,29 @@ public class MainActivity extends MyActivity implements View.OnClickListener,Mai
     public void showUndoRemoveSnackbar(GalleryItem item, int Position) {
         Snackbar.make(selectButton, "Image removed.", Snackbar.LENGTH_SHORT)
                 .setAction("Undo", v -> {
-                    adapter.insertImage(item, Position);
+                    presenter.getAdapter().insertImage(item, Position);
                     MainActivityPresenter.reAddItem(item);
                     recyclerView.scrollToPosition(Position);
                 })
                 .show();
     }
 
+    @Override
+    public void showFilterChooseDialog(CharSequence[] items, boolean[] checkedItems, long videoID) {
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this)
+                .setCancelable(true)
+                .setTitle("Setting Label")
+                .setPositiveButton("Apply", (dialog, which) -> {
+                    presenter.updateLabels(checkedItems, videoID);
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> {
+                }).setMultiChoiceItems(items, checkedItems, (dialog, which, isChecked) -> {
+                });
+        listView = builder.show().getListView();
 
+    }
 
-
+    @RequiresApi(api = Build.VERSION_CODES.O)
     public void showFullscreenPhoto(String path, Info imageInfo) {
         Log.d(TAG, path);
         drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
@@ -250,6 +285,9 @@ public class MainActivity extends MyActivity implements View.OnClickListener,Mai
             photoView.setAnimaDuring(200);
             photoView.setOnLongClickListener(v -> {
                 AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                Vibrator vibrator = (Vibrator) this.getSystemService(VIBRATOR_SERVICE);
+                vibrator.vibrate(30);
+                vibrator.vibrate(VibrationEffect.createOneShot(30, VibrationEffect.DEFAULT_AMPLITUDE));
                 builder.setItems(strings.toArray(new String[0]), (dialog, which) -> {
                     switch (which) {
                         case 0:
