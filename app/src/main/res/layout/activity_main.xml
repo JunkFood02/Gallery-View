@@ -70,7 +70,7 @@
                 app:tint="@color/white" />
 
             <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/deleteButton"
+                android:id="@+id/filterButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="top|end"
@@ -80,9 +80,22 @@
                 app:layout_anchor="@id/button2"
                 app:layout_anchorGravity="top"
                 app:rippleColor="#dddddd"
+                app:srcCompat="@drawable/outline_bookmarks_white_48"
+                app:tint="@color/white" />
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/deleteButton"
+                android:layout_width="wrap_content"
+                android:visibility="invisible"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|end"
+                android:elevation="6dp"
+                android:translationY="-18dp"
+                app:backgroundTint="@color/purple_500"
+                app:layout_anchor="@id/filterButton"
+                app:layout_anchorGravity="top"
+                app:rippleColor="#dddddd"
                 app:srcCompat="@drawable/outline_clear_white_48"
                 app:tint="@color/white" />
-
         </androidx.coordinatorlayout.widget.CoordinatorLayout>
     </FrameLayout>
 

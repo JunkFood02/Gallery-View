@@ -1,6 +1,73 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-             android:layout_width="match_parent"
-             android:layout_height="match_parent">
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/VideoFrame">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/black">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/videoTitle"
+        android:fontFamily="PingFang SC"
+        android:text="@string/app_name"
+        android:textSize="24sp"
+        android:translationZ="30dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_margin="20sp"
+        />
+        <com.airbnb.lottie.LottieAnimationView
+            android:id="@+id/doubleClickAnimation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:translationZ="10dp"
+            app:lottie_url="https://assets10.lottiefiles.com/datafiles/d9bc9kYC2VttaKb/data.json"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.exoplayer2.ui.PlayerView
+            android:id="@+id/VideoPlayView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:use_controller="false"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+        <com.google.android.exoplayer2.ui.PlayerControlView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/controlView"
+            android:touchscreenBlocksFocus="true"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+        <com.airbnb.lottie.LottieAnimationView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/heartAnimationSmall"
+            app:lottie_url="https://assets8.lottiefiles.com/packages/lf20_OkXAMI.json"
+            app:lottie_speed="2.0"
+            android:layout_marginBottom="169dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="@id/heartAnimationSmall"
+            app:layout_constraintStart_toStartOf="@id/heartAnimationSmall"
+            android:layout_marginBottom="148dp"
+
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:textSize="20sp"
+            android:textColor="@color/white"
+            android:text="0"
+            android:id="@+id/heartCountText"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</FrameLayout>

@@ -1,11 +1,13 @@
-package com.example.galleryview;
+package com.example.galleryview.ui;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.media.MediaMetadataRetriever;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,13 +24,15 @@ import com.airbnb.lottie.LottieAnimationView;
 import com.bm.library.Info;
 import com.bm.library.PhotoView;
 import com.bumptech.glide.Glide;
+import com.example.galleryview.MainActivity;
+import com.example.galleryview.R;
+import com.example.galleryview.SwipeVideoPlayActivity;
 import com.example.galleryview.model.DatabaseUtils;
 import com.example.galleryview.model.GalleryItem;
-import com.example.galleryview.model.MyDatabaseHelper;
-import com.example.galleryview.presenter.SwipeVideoPlayPresenter;
+import com.google.android.exoplayer2.MediaItem;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
 public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> implements ItemTouchHelperAdapter {
@@ -36,8 +40,7 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
 
     Handler handler;
     public ViewHolder holder;
-
-    private List<GalleryItem> ItemList;
+    public static List<GalleryItem> ItemList;
 
     public void clearList() {
         while (!ItemList.isEmpty()) {
@@ -76,43 +79,44 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
             Glide.with(MainActivity.getContext()).load(new File(galleryItem.getImagePath())).into(holder.imageView);
             holder.textView.setText("Image Title " + holder.getLayoutPosition());
         } else {
-            bitmap = createThumbnailAtTime(galleryItem.getImagePath(), 1);//生成第一秒的截图
+            galleryItem.setBitmap(createThumbnailAtTime(galleryItem.getImagePath(), 1));//生成第一秒的截图
             holder.textView.setText("Video Title " + holder.getLayoutPosition());
-            if (bitmap != null) {
-                holder.imageView.setImageBitmap(bitmap);
+            if (galleryItem.getBitmap() != null) {
+                holder.imageView.setImageBitmap(galleryItem.getBitmap());
             } else {
                 Toast.makeText(MainActivity.getContext(), "Failed to get bitmap.", Toast.LENGTH_SHORT).show();
             }
         }
-        if (galleryItem.IS_LIKED()) {
+        /*if (galleryItem.IS_LIKED()) {
             holder.lottieAnimationView.setProgress((float) 1.0);
         }
         holder.lottieAnimationView.setOnClickListener(v -> {
             if (!galleryItem.IS_LIKED()) {
                 holder.lottieAnimationView.setSpeed((float) 1.0);
                 holder.lottieAnimationView.playAnimation();
-                galleryItem.clickLike();
                 Toast.makeText(MainActivity.getContext(), "Like", Toast.LENGTH_SHORT).show();
             } else {
                 holder.lottieAnimationView.setSpeed((float) -1.0);
                 holder.lottieAnimationView.playAnimation();
-                galleryItem.clickLike();
                 Toast.makeText(MainActivity.getContext(), "Like Undo", Toast.LENGTH_SHORT).show();
             }
-        });
+        });*/
         holder.cardView.setOnClickListener(v -> {
-            if (galleryItem.getType() == GalleryItem.TYPE_VIDEO) {
-                Intent intent=new Intent(v.getContext(), SwipeVideoPlayActivity.class);
-                intent.putExtra("position",getItemCount()-position-1 );
-                v.getContext().startActivity(intent);
-                //这里写进入短视频 Activity 的逻辑
-            } else {
-                Info info = PhotoView.getImageViewInfo(holder.imageView);
-                Message message = handler.obtainMessage(MainActivity.SHOW_FULLSCREEN_IMAGE);
-                galleryItem.setInfo(info);
+
+            Intent intent = new Intent(v.getContext(), SwipeVideoPlayActivity.class);
+            intent.putExtra("position", position);
+            v.getContext().startActivity(intent);
+            //这里写进入短视频 Activity 的逻辑
+
+        });
+        holder.cardView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+
+                Message message = handler.obtainMessage(MainActivity.SHOW_FILTER_CHOOSE_DIALOG);
                 message.obj = galleryItem;
-                message.arg1 = holder.getLayoutPosition();
                 handler.sendMessage(message);
+                return true;
             }
         });
     }
@@ -124,7 +128,8 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
     public void insertImage(GalleryItem galleryItem, int position) {
         ItemList.add(position, galleryItem);
         notifyItemInserted(position);
-        Log.d(TAG, ""+position);
+        Log.d(TAG, "" + position);
+
     }
 
     @Override
@@ -135,8 +140,8 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
     @Override
     public void onItemDelete(int position, ViewHolder holder) {
         GalleryItem currentItem = ItemList.get(position);
-        Log.d(TAG, "onItemDelete: id = "+currentItem.getId());
-        DatabaseUtils.Delete(currentItem.getId());
+        Log.d(TAG, "onItemDelete: id = " + currentItem.getId());
+        DatabaseUtils.deleteVideoByID(currentItem.getId());
         ItemList.remove(position);
         notifyItemRemoved(position);
         Message message = handler.obtainMessage(MainActivity.UNDO_REMOVE_IMAGE);
@@ -146,7 +151,6 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        View ItemView;
         ImageView imageView;
         LottieAnimationView lottieAnimationView;
         TextView textView;
@@ -158,10 +162,10 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
             cardView = itemView.findViewById(R.id.cardView);
             imageView = itemView.findViewById(R.id.imageView);
             textView = itemView.findViewById(R.id.editText);
-            lottieAnimationView = itemView.findViewById(R.id.animate);
+            /*lottieAnimationView = itemView.findViewById(R.id.animate);
             lottieAnimationView.setScaleX((float) 1.5);
             lottieAnimationView.setScaleY((float) 1.5);
-            lottieAnimationView.setAnimation("heart.json");
+            lottieAnimationView.setAnimation("heart.json");*/
         }
     }
 

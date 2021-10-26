@@ -3,12 +3,18 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="../../../../layout/custom_preview.xml" value="0.1" />
         <entry key="..\:/data/Codes/ans1/GalleryView/app/src/main/res/drawable/ic_launcher_background.xml" value="0.271" />
         <entry key="..\:/data/Codes/ans1/GalleryView/app/src/main/res/drawable/outline_add_24.xml" value="0.1" />
         <entry key="..\:/data/Codes/ans1/GalleryView/app/src/main/res/drawable/outline_menu_24.xml" value="0.151" />
         <entry key="..\:/data/Codes/ans1/GalleryView/app/src/main/res/layout/activity_big_pigture.xml" value="0.18795289855072464" />
         <entry key="..\:/data/Codes/ans1/GalleryView/app/src/main/res/layout/activity_main.xml" value="0.18795289855072464" />
         <entry key="..\:/data/Codes/ans1/GalleryView/app/src/main/res/layout/gallery_item.xml" value="0.5142857142857143" />
+        <entry key="app/src/main/res/layout/activity_big_pigture.xml" value="0.16995947315096252" />
+        <entry key="app/src/main/res/layout/activity_main.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/activity_swipe_video_play.xml" value="0.10925925925925926" />
+        <entry key="app/src/main/res/layout/gallery_item.xml" value="0.16995947315096252" />
+        <entry key="app/src/main/res/layout/video_item.xml" value="0.45" />
       </map>
     </option>
   </component>

@@ -1,10 +1,8 @@
-package com.example.galleryview;
+package com.example.galleryview.ui;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.example.galleryview.ui.ItemAdapter;
 
 public class MyItemTouchHelperCallBack extends ItemTouchHelper.Callback {
     private final ItemTouchHelperAdapter adapter;

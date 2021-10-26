@@ -1,21 +1,21 @@
 package com.example.galleryview.model;
 
 import android.content.ContentValues;
+import android.graphics.Bitmap;
 
 import com.bm.library.Info;
+import com.example.galleryview.dao.Video;
 import com.example.galleryview.model.DatabaseUtils;
 
 
 public class GalleryItem {
     private String imagePath;
-    private Info info;
     private static final String TAG = "GalleryItem";
     private int type;
     private long id;
-    private int IS_LIKED = NOT_LIKED;
-    private final static int LIKED = 1;
-    private final static int NOT_LIKED = -1;
-
+    private int heartCount = 0;
+    private String label = null;
+    Bitmap bitmap;
     public static final int TYPE_IMAGE = 1;
     public static final int TYPE_VIDEO = 2;
 
@@ -32,18 +32,16 @@ public class GalleryItem {
     }
 
     public int getIS_LIKED() {
-        return IS_LIKED;
+        return heartCount;
     }
 
-    public boolean IS_LIKED() {
-        return IS_LIKED == LIKED;
+    public void doubleClickLike() {
+        heartCount++;
+        updateHeartCount();
     }
 
-    public void clickLike() {
-        IS_LIKED = -IS_LIKED;
-        ContentValues values = new ContentValues();
-        values.put("liked", IS_LIKED);
-        DatabaseUtils.Update(id,values);
+    private void updateHeartCount() {
+        DatabaseUtils.Update(new Video(this));
     }
 
     public void setId(long id) {
@@ -53,39 +51,57 @@ public class GalleryItem {
     public GalleryItem(String imagePath) {
         this.imagePath = imagePath;
         this.type = TYPE_IMAGE;
-        IS_LIKED = NOT_LIKED;
     }
 
     public GalleryItem(String imagePath, int type) {
         this.imagePath = imagePath;
         this.type = type;
-        IS_LIKED = NOT_LIKED;
     }
 
     public GalleryItem(String imagePath, int type, long id) {
         this.imagePath = imagePath;
         this.type = type;
         this.id = id;
-        IS_LIKED = NOT_LIKED;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
     }
 
     public GalleryItem(String imagePath, int type, long id, int IS_LIKED) {
         this.imagePath = imagePath;
         this.type = type;
         this.id = id;
-        this.IS_LIKED = IS_LIKED;
+        this.heartCount = IS_LIKED;
     }
 
-    public Info getInfo() {
-        return info;
+    public GalleryItem(String imagePath, long id, int heartCount) {
+        this.imagePath = imagePath;
+        this.id = id;
+        this.heartCount = heartCount;
     }
 
-    public void setInfo(Info info) {
-        this.info = info;
+    public GalleryItem(Video video) {
+        this.imagePath = video.path;
+        this.heartCount = video.heartCount;
+        this.id = video.id;
     }
 
     public String getImagePath() {
         return imagePath;
+    }
+
+
+    public Bitmap getBitmap() {
+        return bitmap;
+    }
+
+    public void setBitmap(Bitmap bitmap) {
+        this.bitmap = bitmap;
     }
 
     public void setImagePath(String imagePath) {
