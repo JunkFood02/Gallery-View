@@ -25,6 +25,7 @@ import com.bumptech.glide.Glide;
 import com.example.galleryview.model.DatabaseUtils;
 import com.example.galleryview.model.GalleryItem;
 import com.example.galleryview.model.MyDatabaseHelper;
+import com.example.galleryview.presenter.SwipeVideoPlayPresenter;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -32,11 +33,11 @@ import java.util.List;
 
 public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> implements ItemTouchHelperAdapter {
     private static final String TAG = "ItemAdapter";
-    SQLiteDatabase db;
-    MyDatabaseHelper helper;
+
     Handler handler;
     public ViewHolder holder;
-    private List<GalleryItem> ItemList = new ArrayList<>();
+
+    private List<GalleryItem> ItemList;
 
     public void clearList() {
         while (!ItemList.isEmpty()) {
@@ -50,9 +51,6 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.gallery_item, parent, false);
         final ViewHolder holder = new ViewHolder(view);
-        helper = new MyDatabaseHelper(MainActivity.getContext(), "Gallery.db", null, 1);
-        db = helper.getWritableDatabase();
-
         this.holder = holder;
         return holder;
     }
@@ -104,10 +102,10 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
         });
         holder.cardView.setOnClickListener(v -> {
             if (galleryItem.getType() == GalleryItem.TYPE_VIDEO) {
-                Intent intent = new Intent(v.getContext(), BigPictureActivity.class);
-                intent.putExtra("path", galleryItem.getImagePath());
-                intent.putExtra("media_type", galleryItem.getType());
+                Intent intent=new Intent(v.getContext(), SwipeVideoPlayActivity.class);
+                intent.putExtra("position",getItemCount()-position-1 );
                 v.getContext().startActivity(intent);
+                //这里写进入短视频 Activity 的逻辑
             } else {
                 Info info = PhotoView.getImageViewInfo(holder.imageView);
                 Message message = handler.obtainMessage(MainActivity.SHOW_FULLSCREEN_IMAGE);
