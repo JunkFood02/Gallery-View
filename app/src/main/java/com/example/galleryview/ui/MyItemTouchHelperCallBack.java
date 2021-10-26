@@ -4,6 +4,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.galleryview.ui.ItemAdapter;
+
 public class MyItemTouchHelperCallBack extends ItemTouchHelper.Callback {
     private final ItemTouchHelperAdapter adapter;
 
@@ -37,4 +39,5 @@ public class MyItemTouchHelperCallBack extends ItemTouchHelper.Callback {
     public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
         adapter.onItemDelete(viewHolder.getLayoutPosition(), (ItemAdapter.ViewHolder) viewHolder);
     }
+
 }
