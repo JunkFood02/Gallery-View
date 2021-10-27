@@ -54,4 +54,13 @@ public interface VideoBookDao {
 
     @Query("DELETE FROM LABELRECORD WHERE video_id=:videoID AND label_id=:labelID ")
     void deleteSpecificLabelByID(long videoID, int labelID);
+
+    @Insert
+    void hideVideo(HiddenVideo hiddenVideo);
+
+    @Query("SELECT * FROM HiddenVideo")
+    List<HiddenVideo> getAllHiddenVideo();
+
+    @Query("DELETE FROM hiddenvideo")
+    void deleteAllHiddenVideo();
 }

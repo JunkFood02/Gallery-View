@@ -3,6 +3,7 @@ package com.example.galleryview.presenter;
 import static android.os.Looper.getMainLooper;
 import static com.example.galleryview.MainActivity.SHOW_FILTER_CHOOSE_DIALOG;
 import static com.example.galleryview.MainActivity.SHOW_FULLSCREEN_IMAGE;
+import static com.example.galleryview.MainActivity.UNDO_HIDE_VIDEO;
 import static com.example.galleryview.MainActivity.UNDO_REMOVE_IMAGE;
 import static com.example.galleryview.MyActivity.context;
 import static com.example.galleryview.model.DatabaseUtils.dao;
@@ -23,6 +24,7 @@ import androidx.room.Room;
 
 import com.bm.library.Info;
 import com.example.galleryview.dao.AppDatabase;
+import com.example.galleryview.dao.HiddenVideo;
 import com.example.galleryview.dao.LabelRecord;
 import com.example.galleryview.dao.Video;
 import com.example.galleryview.dao.VideoBookDao;
@@ -158,10 +160,22 @@ public class MainActivityPresenter {
                         boolean[] checkedItems = DatabaseUtils.findCheckedLabelsByVideoId(labels.size(), videoID);
                         mainActivityInterface.showFilterChooseDialog(items, checkedItems, videoID);
                         break;
-
+                    case UNDO_HIDE_VIDEO:
+                        galleryItem = (GalleryItem) msg.obj;
+                        position = msg.arg1;
+                        mainActivityInterface.showUndoHideSnackbar(galleryItem, position);
                 }
             }
         }).start();
+    }
+    public void showHiddenVideos()
+    {
+        adapter.clearList();
+        for (HiddenVideo v : DatabaseUtils.getHideVideos()
+        ) {
+            adapter.addImage(new GalleryItem(v));
+        }
+        ShowLabels=new boolean[labels.size()];
     }
 
     public void updateLabels(boolean[] checkedItems, long videoID) {

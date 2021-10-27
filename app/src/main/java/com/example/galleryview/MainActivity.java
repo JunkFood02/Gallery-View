@@ -2,6 +2,7 @@ package com.example.galleryview;
 
 import android.Manifest;
 import android.content.DialogInterface;
+import android.content.Entity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -16,6 +17,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -66,6 +68,8 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
     List<String> strings = new ArrayList<>();
     Animation fadeIn, fadeOut;
     FrameLayout background;
+    ItemTouchHelper touchHelper;
+    ItemTouchHelper.Callback callback;
     Toolbar toolbar;
     PhotoView photoView;
     MainActivityPresenter presenter;
@@ -76,6 +80,7 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
     public static final int SHOW_FULLSCREEN_IMAGE = 1;
     public static final int SHOW_FILTER_CHOOSE_DIALOG = 2;
     public static final int UNDO_REMOVE_IMAGE = -1;
+    public static final int UNDO_HIDE_VIDEO = -2;
 
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP_MR1)
@@ -141,9 +146,9 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
                 AlertDialog.Builder builder = new AlertDialog.Builder(this).setTitle("Choose labels to show").
                         setMultiChoiceItems(presenter.getLabels(), checkedItems, (dialog, which, isChecked) -> {
                         }).setPositiveButton("Apply", (dialog, which) -> {
-                            presenter.updateLabels(checkedItems, 0);
-                            presenter.reArrangeAdapter(checkedItems);
-                        }).setNegativeButton("Cancel", (dialog, which) -> {
+                    presenter.updateLabels(checkedItems, 0);
+                    presenter.reArrangeAdapter(checkedItems);
+                }).setNegativeButton("Cancel", (dialog, which) -> {
                 });
                 builder.show();
                 break;
@@ -235,15 +240,30 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
         });
         clearAllButton.setOnClickListener(this);
         presenter.setAdapter(new ItemAdapter(presenter.getGalleryItemList(), presenter.getHandler()));
-        ItemTouchHelper.Callback callback = new MyItemTouchHelperCallBack(presenter.getAdapter());
-        ItemTouchHelper touchHelper = new ItemTouchHelper(callback);
+        callback = new MyItemTouchHelperCallBack(presenter.getAdapter());
+        touchHelper = new ItemTouchHelper(callback);
         touchHelper.attachToRecyclerView(recyclerView);
         recyclerView.setAdapter(presenter.getAdapter());
         LoadImages();
-        strings.add("Upload this image");
-        strings.add("Delete this image");
-        fadeIn.setDuration(photoView.getAnimaDuring());
-        fadeOut.setDuration(photoView.getAnimaDuring());
+        filterButton.setLongClickable(true);
+        filterButton.setOnLongClickListener(v -> {
+            EditText editText = new EditText(v.getContext());
+            AlertDialog.Builder builder = new AlertDialog.Builder(v.getContext());
+            builder.setTitle("Enter password to display hidden video").setView(editText);
+            builder.setPositiveButton("Confirm", (dialog, which) -> {
+                if (editText.getText().toString().equals("123456")) {
+                    Toast.makeText(v.getContext(), "Password correct", Toast.LENGTH_SHORT).show();
+                    touchHelper.attachToRecyclerView(null);
+                    presenter.showHiddenVideos();
+                    actionBar.setTitle("Hidden Video");
+                    filterButton.setVisibility(View.INVISIBLE);
+                    selectButton.setVisibility(View.INVISIBLE);
+                } else
+                    Toast.makeText(v.getContext(), "Password Incorrect!", Toast.LENGTH_SHORT).show();
+            }).setNegativeButton("Cancel", (dialog, which) -> {
+            }).show();
+            return true;
+        });
     }
 
 
@@ -316,6 +336,12 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
         }
     }
 
+    @Override
+    public void showUndoHideSnackbar(GalleryItem item, int Position) {
+        Snackbar.make(selectButton, "Video has been hidden.", Snackbar.LENGTH_SHORT)
+                .show();
+    }
+
     public void hideFullscreenPhoto() {
         photoView.destroyDrawingCache();
         drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
@@ -335,8 +361,6 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
     }
 
     public void backgroundChange() {
-
-
         if (background.getVisibility() == View.INVISIBLE) {
             background.setVisibility(View.VISIBLE);
             background.startAnimation(fadeIn);
