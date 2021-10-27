@@ -6,9 +6,15 @@ import androidx.recyclerview.widget.RecyclerView;
 
 public class MyItemTouchHelperCallBack extends ItemTouchHelper.Callback {
     private final ItemTouchHelperAdapter adapter;
+    private boolean swipeEnable = true;
 
     public MyItemTouchHelperCallBack(ItemTouchHelperAdapter adapter) {
         this.adapter = adapter;
+    }
+
+    public MyItemTouchHelperCallBack(boolean swipeEnable) {
+        this.swipeEnable = swipeEnable;
+        adapter = null;
     }
 
     @Override
@@ -20,7 +26,7 @@ public class MyItemTouchHelperCallBack extends ItemTouchHelper.Callback {
 
     @Override
     public boolean isItemViewSwipeEnabled() {
-        return true;
+        return swipeEnable;
     }
 
     @Override
@@ -35,7 +41,10 @@ public class MyItemTouchHelperCallBack extends ItemTouchHelper.Callback {
 
     @Override
     public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-        adapter.onItemDelete(viewHolder.getLayoutPosition(), (ItemAdapter.ViewHolder) viewHolder);
+        if ((direction & ItemTouchHelper.LEFT) != 0)
+            adapter.onItemDelete(viewHolder.getLayoutPosition(), (ItemAdapter.ViewHolder) viewHolder);
+        else
+            adapter.onItemHidden(viewHolder.getLayoutPosition(), (ItemAdapter.ViewHolder) viewHolder);
     }
 
 }

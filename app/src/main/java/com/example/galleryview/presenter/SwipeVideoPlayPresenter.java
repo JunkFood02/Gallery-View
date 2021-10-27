@@ -34,8 +34,8 @@ public class SwipeVideoPlayPresenter {
 
     public void swipeToNextVideo(int position) {
         int NextPosition;
-        if (position != 0) {
-            NextPosition = position - 1;
+        if (position != adapter.getItemCount()) {
+            NextPosition = position + 1;
             activePosition = NextPosition;
             Interface.swipeToNextVideo(NextPosition, adapter.getItemCount());
             Log.d(TAG, "swipeToNextVideo: NextPosition = " + NextPosition);

@@ -150,6 +150,19 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
         handler.sendMessage(message);
     }
 
+    @Override
+    public void onItemHidden(int position, ViewHolder holder) {
+        GalleryItem currentItem = ItemList.get(position);
+        Log.d(TAG, "onItemHidden: id = " + currentItem.getId());
+        DatabaseUtils.hideVideoByID(currentItem.getId());
+        ItemList.remove(position);
+        notifyItemRemoved(position);
+        Message message = handler.obtainMessage(MainActivity.UNDO_HIDE_VIDEO);
+        message.obj = currentItem;
+        message.arg1 = position;
+        handler.sendMessage(message);
+    }
+
     static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView imageView;
         LottieAnimationView lottieAnimationView;

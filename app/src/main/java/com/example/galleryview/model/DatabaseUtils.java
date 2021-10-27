@@ -19,6 +19,7 @@ import com.airbnb.lottie.L;
 import com.example.galleryview.MainActivity;
 import com.example.galleryview.R;
 import com.example.galleryview.dao.AppDatabase;
+import com.example.galleryview.dao.HiddenVideo;
 import com.example.galleryview.dao.LabelRecord;
 import com.example.galleryview.dao.Video;
 import com.example.galleryview.dao.VideoBookDao;
@@ -67,12 +68,7 @@ public class DatabaseUtils {
 
     public static List<Video> getAllVideoFromRoom() {
         List<Video> videos = new ArrayList<>();
-        Future<List<Video>> future = exec.submit(new Callable<List<Video>>() {
-            @Override
-            public List<Video> call() throws Exception {
-                return dao.getAllVideos();
-            }
-        });
+        Future<List<Video>> future = exec.submit(() -> dao.getAllVideos());
         try {
             videos = future.get();
         } catch (ExecutionException | InterruptedException e) {
@@ -85,6 +81,7 @@ public class DatabaseUtils {
         new Thread(() -> {
             dao.deleteAllVideo();
             dao.deleteAllLabel();
+            dao.deleteAllHiddenVideo();
         }).start();
 
     }
@@ -129,8 +126,6 @@ public class DatabaseUtils {
 
             }
         }).start();
-
-
     }
 
     public static List<Video> getAllVideosByLabelIDs(List<Long> ids) {
@@ -144,5 +139,21 @@ public class DatabaseUtils {
         return videos;
     }
 
+    public static void hideVideoByID(long id){
+        new Thread(() -> dao.hideVideo(new HiddenVideo(dao.findVideoById(id)))).start();
+        deleteVideoByID(id);
+        cleanLabelsByVideoID(id);
+    }
+    public static List<HiddenVideo> getHideVideos()
+    {
+        List<HiddenVideo> hiddenVideos=new ArrayList<>();
+        Future<List<HiddenVideo>> future=exec.submit(() -> dao.getAllHiddenVideo());
+        try {
+            hiddenVideos=future.get();
+        } catch (ExecutionException | InterruptedException e) {
+            e.printStackTrace();
+        }
+        return hiddenVideos;
+    }
 
 }
