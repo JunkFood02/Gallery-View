@@ -1,11 +1,9 @@
 package com.example.galleryview.model;
 
-import android.content.ContentValues;
 import android.graphics.Bitmap;
 
-import com.bm.library.Info;
+import com.example.galleryview.dao.HiddenVideo;
 import com.example.galleryview.dao.Video;
-import com.example.galleryview.model.DatabaseUtils;
 
 
 public class GalleryItem {
@@ -15,6 +13,7 @@ public class GalleryItem {
     private long id;
     private int heartCount = 0;
     private String label = null;
+    private boolean IS_HIDDEN = false;
     Bitmap bitmap;
     public static final int TYPE_IMAGE = 1;
     public static final int TYPE_VIDEO = 2;
@@ -40,8 +39,14 @@ public class GalleryItem {
         updateHeartCount();
     }
 
+    public boolean IS_HIDDEN() {
+        return IS_HIDDEN;
+    }
+
     private void updateHeartCount() {
-        DatabaseUtils.Update(new Video(this));
+        if (!IS_HIDDEN) DatabaseUtils.Update(new Video(this));
+        else
+            DatabaseUtils.UpdateHiddenVideo(new HiddenVideo(this));
     }
 
     public void setId(long id) {
@@ -89,6 +94,13 @@ public class GalleryItem {
         this.imagePath = video.path;
         this.heartCount = video.heartCount;
         this.id = video.id;
+    }
+
+    public GalleryItem(HiddenVideo video) {
+        this.imagePath = video.path;
+        this.heartCount = video.heartCount;
+        this.id = video.id;
+        IS_HIDDEN = true;
     }
 
     public String getImagePath() {

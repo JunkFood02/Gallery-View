@@ -56,7 +56,10 @@ public class DatabaseUtils {
         }
         return id;
     }
-
+    public static void deleteHiddenVideoByID(long id)
+    {
+        new Thread(() -> dao.deleteHiddenVideoByID(id)).start();
+    }
     public static void insertLabel(int labelID, long videoID) {
         new Thread(() -> dao.insertLabel(new LabelRecord(labelID, videoID))).start();
 
@@ -64,6 +67,10 @@ public class DatabaseUtils {
 
     public static void Update(Video video) {
         new Thread(() -> dao.updateVideo(video)).start();
+    }
+
+    public static void UpdateHiddenVideo(HiddenVideo hiddenVideo) {
+        new Thread(() -> dao.updateHiddenVideo(hiddenVideo)).start();
     }
 
     public static List<Video> getAllVideoFromRoom() {
@@ -139,17 +146,31 @@ public class DatabaseUtils {
         return videos;
     }
 
-    public static void hideVideoByID(long id){
-        new Thread(() -> dao.hideVideo(new HiddenVideo(dao.findVideoById(id)))).start();
-        deleteVideoByID(id);
-        cleanLabelsByVideoID(id);
+    public static void hideVideoByID(long id) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                dao.hideVideo(new HiddenVideo(dao.findVideoById(id)));
+                deleteVideoByID(id);
+                cleanLabelsByVideoID(id);
+            }
+        }).start();
     }
-    public static List<HiddenVideo> getHideVideos()
+
+    public static void hideVideo(GalleryItem item)
     {
-        List<HiddenVideo> hiddenVideos=new ArrayList<>();
-        Future<List<HiddenVideo>> future=exec.submit(() -> dao.getAllHiddenVideo());
+        new Thread(() -> {
+            dao.hideVideo(new HiddenVideo(item));
+            deleteVideoByID(item.getId());
+            cleanLabelsByVideoID(item.getId());
+        }).start();
+    }
+
+    public static List<HiddenVideo> getHideVideos() {
+        List<HiddenVideo> hiddenVideos = new ArrayList<>();
+        Future<List<HiddenVideo>> future = exec.submit(() -> dao.getAllHiddenVideo());
         try {
-            hiddenVideos=future.get();
+            hiddenVideos = future.get();
         } catch (ExecutionException | InterruptedException e) {
             e.printStackTrace();
         }

@@ -8,9 +8,13 @@ public interface MainActivityInterface {
 
     void showFullscreenPhoto(String path, Info imageInfo);
 
-    void showUndoHideSnackbar(GalleryItem item, int Position);
+    void showHideSnackbar();
+
+    void showUndoHideSnackbar();
 
     void showUndoRemoveSnackbar(GalleryItem item, int Position);
 
     void showFilterChooseDialog(CharSequence[] items, boolean[] checkedItems, long videoID);
+
+    void showRemoveHiddenVideoSnackbar();
 }

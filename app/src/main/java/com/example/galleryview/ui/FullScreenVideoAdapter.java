@@ -34,7 +34,7 @@ public class FullScreenVideoAdapter extends RecyclerView.Adapter<FullScreenVideo
     SwipeVideoPlayPresenter presenter;
     private static final String TAG = "FullScreenVideoAdapter";
     private List<GalleryItem> itemList;
-    private Map<Integer, VideoController> controllers = new HashMap<>();
+    private final Map<Integer, VideoController> controllers = new HashMap<>();
 
     @NonNull
     @Override
@@ -197,7 +197,8 @@ public class FullScreenVideoAdapter extends RecyclerView.Adapter<FullScreenVideo
 
         public void noticeVideoStart() {
             player.prepare();
-            player.seekTo(100);
+            if (player.getDuration() > player.getCurrentPosition() * 2)
+                player.seekTo(100);
             player.play();
         }
 

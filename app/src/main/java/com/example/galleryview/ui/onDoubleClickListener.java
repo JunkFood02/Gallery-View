@@ -9,7 +9,7 @@ public abstract class onDoubleClickListener implements View.OnClickListener {
     // The time in which the second tap should be done in order to qualify as
     // a double click
     private static final long DEFAULT_QUALIFICATION_SPAN = 500;
-    private long doubleClickQualificationSpanInMillis;
+    private final long doubleClickQualificationSpanInMillis;
     private long timestampLastClick;
 
     public onDoubleClickListener() {

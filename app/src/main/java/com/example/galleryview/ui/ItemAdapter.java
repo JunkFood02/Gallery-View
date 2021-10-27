@@ -1,10 +1,14 @@
 package com.example.galleryview.ui;
 
+import static com.example.galleryview.model.DatabaseUtils.deleteHiddenVideoByID;
+import static com.example.galleryview.model.DatabaseUtils.insertVideo;
+
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.media.MediaMetadataRetriever;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.ContactsContract;
@@ -27,6 +31,7 @@ import com.bumptech.glide.Glide;
 import com.example.galleryview.MainActivity;
 import com.example.galleryview.R;
 import com.example.galleryview.SwipeVideoPlayActivity;
+import com.example.galleryview.dao.Video;
 import com.example.galleryview.model.DatabaseUtils;
 import com.example.galleryview.model.GalleryItem;
 import com.google.android.exoplayer2.MediaItem;
@@ -79,14 +84,13 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
             Glide.with(MainActivity.getContext()).load(new File(galleryItem.getImagePath())).into(holder.imageView);
             holder.textView.setText("Image Title " + holder.getLayoutPosition());
         } else {
-            galleryItem.setBitmap(createThumbnailAtTime(galleryItem.getImagePath(), 1));//生成第一秒的截图
+            //galleryItem.setBitmap(createThumbnailAtTime(galleryItem.getImagePath(), 1));//生成第一秒的截图
             holder.textView.setText("Video Title " + holder.getLayoutPosition());
-            if (galleryItem.getBitmap() != null) {
-                holder.imageView.setImageBitmap(galleryItem.getBitmap());
-            } else {
-                Toast.makeText(MainActivity.getContext(), "Failed to get bitmap.", Toast.LENGTH_SHORT).show();
-            }
+            Glide.with(holder.imageView).load((galleryItem.getImagePath())).into(holder.imageView);
         }
+        //Toast.makeText(MainActivity.getContext(), "Failed to get bitmap.", Toast.LENGTH_SHORT).show();
+
+
         /*if (galleryItem.IS_LIKED()) {
             holder.lottieAnimationView.setProgress((float) 1.0);
         }
@@ -104,7 +108,7 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
         holder.cardView.setOnClickListener(v -> {
 
             Intent intent = new Intent(v.getContext(), SwipeVideoPlayActivity.class);
-            intent.putExtra("position", position);
+            intent.putExtra("position", holder.getLayoutPosition());
             v.getContext().startActivity(intent);
             //这里写进入短视频 Activity 的逻辑
 
@@ -112,7 +116,7 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
         holder.cardView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-
+                if (galleryItem.IS_HIDDEN()) return true;
                 Message message = handler.obtainMessage(MainActivity.SHOW_FILTER_CHOOSE_DIALOG);
                 message.obj = galleryItem;
                 handler.sendMessage(message);
@@ -140,27 +144,40 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
     @Override
     public void onItemDelete(int position, ViewHolder holder) {
         GalleryItem currentItem = ItemList.get(position);
-        Log.d(TAG, "onItemDelete: id = " + currentItem.getId());
-        DatabaseUtils.deleteVideoByID(currentItem.getId());
         ItemList.remove(position);
         notifyItemRemoved(position);
-        Message message = handler.obtainMessage(MainActivity.UNDO_REMOVE_IMAGE);
-        message.obj = currentItem;
-        message.arg1 = position;
-        handler.sendMessage(message);
+        if (!currentItem.IS_HIDDEN()) {
+            Log.d(TAG, "onItemDelete: id = " + currentItem.getId());
+            DatabaseUtils.deleteVideoByID(currentItem.getId());
+            Message message = handler.obtainMessage(MainActivity.UNDO_REMOVE_IMAGE);
+            message.obj = currentItem;
+            message.arg1 = position;
+            handler.sendMessage(message);
+        } else {
+            DatabaseUtils.deleteHiddenVideoByID(currentItem.getId());
+            Message message = handler.obtainMessage(MainActivity.REMOVE_HIDDEN_VIDEO);
+            handler.sendMessage(message);
+        }
     }
 
     @Override
     public void onItemHidden(int position, ViewHolder holder) {
         GalleryItem currentItem = ItemList.get(position);
         Log.d(TAG, "onItemHidden: id = " + currentItem.getId());
-        DatabaseUtils.hideVideoByID(currentItem.getId());
         ItemList.remove(position);
         notifyItemRemoved(position);
-        Message message = handler.obtainMessage(MainActivity.UNDO_HIDE_VIDEO);
-        message.obj = currentItem;
-        message.arg1 = position;
-        handler.sendMessage(message);
+        if (!currentItem.IS_HIDDEN()) {
+            DatabaseUtils.hideVideo(currentItem);
+            Message message = handler.obtainMessage(MainActivity.HIDE_VIDEO);
+            handler.sendMessage(message);
+        } else {
+            DatabaseUtils.deleteHiddenVideoByID(currentItem.getId());
+            Video video = new Video(currentItem);
+            currentItem.setId(insertVideo(video));
+            DatabaseUtils.insertLabel(0, currentItem.getId());
+            Message message = handler.obtainMessage(MainActivity.UNDO_HIDE_VIDEO);
+            handler.sendMessage(message);
+        }
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
