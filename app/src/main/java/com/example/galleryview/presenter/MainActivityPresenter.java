@@ -1,46 +1,34 @@
 package com.example.galleryview.presenter;
 
 import static android.os.Looper.getMainLooper;
+import static com.example.galleryview.MainActivity.HIDE_VIDEO;
+import static com.example.galleryview.MainActivity.REMOVE_HIDDEN_VIDEO;
 import static com.example.galleryview.MainActivity.SHOW_FILTER_CHOOSE_DIALOG;
 import static com.example.galleryview.MainActivity.SHOW_FULLSCREEN_IMAGE;
 import static com.example.galleryview.MainActivity.UNDO_HIDE_VIDEO;
 import static com.example.galleryview.MainActivity.UNDO_REMOVE_IMAGE;
-import static com.example.galleryview.MyActivity.context;
-import static com.example.galleryview.model.DatabaseUtils.dao;
 import static com.example.galleryview.model.DatabaseUtils.getAllVideoFromRoom;
 import static com.example.galleryview.model.DatabaseUtils.insertVideo;
 
-import android.app.AlertDialog;
-import android.content.ContentValues;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.room.Room;
 
-import com.bm.library.Info;
-import com.example.galleryview.dao.AppDatabase;
-import com.example.galleryview.dao.HiddenVideo;
-import com.example.galleryview.dao.LabelRecord;
-import com.example.galleryview.dao.Video;
-import com.example.galleryview.dao.VideoBookDao;
-import com.example.galleryview.model.GalleryItem;
-import com.example.galleryview.ui.ItemAdapter;
 import com.example.galleryview.MainActivity;
+import com.example.galleryview.dao.HiddenVideo;
+import com.example.galleryview.dao.Video;
 import com.example.galleryview.model.DatabaseUtils;
-import com.example.galleryview.model.HttpUtils;
+import com.example.galleryview.model.GalleryItem;
 import com.example.galleryview.model.PhotoSelector;
+import com.example.galleryview.ui.ItemAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 public class MainActivityPresenter {
-    private static final String TAG = "MainActivityPresenter";
     static private ItemAdapter adapter;
     private int position;
     private GalleryItem galleryItem;
@@ -67,7 +55,7 @@ public class MainActivityPresenter {
         labels.add("Default Label 2");
         labels.add("Default Label 3");
         labels.add("Default Label 4");
-        ShowLabels=new boolean[labels.size()];
+        ShowLabels = new boolean[labels.size()];
     }
 
 
@@ -132,10 +120,6 @@ public class MainActivityPresenter {
         }
     }
 
-    public boolean[] getOnShowLabels() {
-        return DatabaseUtils.findCheckedLabelsByVideoId(labels.size(), 0);
-    }
-
     private void setupHandler() {
         new Thread(() -> handler = new Handler(getMainLooper()) {
             @Override
@@ -160,22 +144,25 @@ public class MainActivityPresenter {
                         boolean[] checkedItems = DatabaseUtils.findCheckedLabelsByVideoId(labels.size(), videoID);
                         mainActivityInterface.showFilterChooseDialog(items, checkedItems, videoID);
                         break;
+                    case HIDE_VIDEO:
+                        mainActivityInterface.showHideSnackbar();
+                        break;
                     case UNDO_HIDE_VIDEO:
-                        galleryItem = (GalleryItem) msg.obj;
-                        position = msg.arg1;
-                        mainActivityInterface.showUndoHideSnackbar(galleryItem, position);
+                        mainActivityInterface.showUndoHideSnackbar();
+                        break;
+                    case REMOVE_HIDDEN_VIDEO:
+                        mainActivityInterface.showRemoveHiddenVideoSnackbar();
                 }
             }
         }).start();
     }
-    public void showHiddenVideos()
-    {
+
+    public void showHiddenVideos() {
         adapter.clearList();
         for (HiddenVideo v : DatabaseUtils.getHideVideos()
         ) {
             adapter.addImage(new GalleryItem(v));
         }
-        ShowLabels=new boolean[labels.size()];
     }
 
     public void updateLabels(boolean[] checkedItems, long videoID) {

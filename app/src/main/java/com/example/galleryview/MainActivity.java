@@ -1,8 +1,6 @@
 package com.example.galleryview;
 
 import android.Manifest;
-import android.content.DialogInterface;
-import android.content.Entity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -81,6 +79,8 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
     public static final int SHOW_FILTER_CHOOSE_DIALOG = 2;
     public static final int UNDO_REMOVE_IMAGE = -1;
     public static final int UNDO_HIDE_VIDEO = -2;
+    public static final int HIDE_VIDEO = -3;
+    public static final int REMOVE_HIDDEN_VIDEO = -4;
 
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP_MR1)
@@ -178,7 +178,7 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
 
     private void openAlbum() {
         Intent intent = new Intent("android.intent.action.GET_CONTENT");
-        intent.setType("*/*");
+        intent.setType("video/*");
         launcher_album.launch(intent);
     }
 
@@ -192,16 +192,13 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home: {
-                drawerLayout.openDrawer(GravityCompat.START);
-                break;
-            }
+        if (item.getItemId() == android.R.id.home) {
+            drawerLayout.openDrawer(GravityCompat.START);
         }
         return true;
     }
 
-    private void LoadImages() throws ExecutionException, InterruptedException {
+    private void LoadImages() {
         //presenter.readAlbumDataFromDatabase();
         presenter.readAlbumDataFromRoomDatabase();
     }
@@ -253,11 +250,13 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
             builder.setPositiveButton("Confirm", (dialog, which) -> {
                 if (editText.getText().toString().equals("123456")) {
                     Toast.makeText(v.getContext(), "Password correct", Toast.LENGTH_SHORT).show();
-                    touchHelper.attachToRecyclerView(null);
+                    //touchHelper.attachToRecyclerView(null);
                     presenter.showHiddenVideos();
+                    assert actionBar != null;
                     actionBar.setTitle("Hidden Video");
-                    filterButton.setVisibility(View.INVISIBLE);
-                    selectButton.setVisibility(View.INVISIBLE);
+                    filterButton.setVisibility(View.GONE);
+                    selectButton.setVisibility(View.GONE);
+                    clearAllButton.setVisibility(View.GONE);
                 } else
                     Toast.makeText(v.getContext(), "Password Incorrect!", Toast.LENGTH_SHORT).show();
             }).setNegativeButton("Cancel", (dialog, which) -> {
@@ -283,14 +282,18 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
         android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this)
                 .setCancelable(true)
                 .setTitle("Setting Label")
-                .setPositiveButton("Apply", (dialog, which) -> {
-                    presenter.updateLabels(checkedItems, videoID);
-                })
+                .setPositiveButton("Apply", (dialog, which) -> presenter.updateLabels(checkedItems, videoID))
                 .setNegativeButton("Cancel", (dialog, which) -> {
                 }).setMultiChoiceItems(items, checkedItems, (dialog, which, isChecked) -> {
                 });
         listView = builder.show().getListView();
 
+    }
+
+    @Override
+    public void showRemoveHiddenVideoSnackbar() {
+        Snackbar.make(selectButton, "This Video has been remove.", Snackbar.LENGTH_SHORT)
+                .show();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -337,7 +340,13 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
     }
 
     @Override
-    public void showUndoHideSnackbar(GalleryItem item, int Position) {
+    public void showUndoHideSnackbar() {
+        Snackbar.make(selectButton, "Video is unhidden now. You can see it after restart application.", Snackbar.LENGTH_SHORT)
+                .show();
+    }
+
+    @Override
+    public void showHideSnackbar() {
         Snackbar.make(selectButton, "Video has been hidden.", Snackbar.LENGTH_SHORT)
                 .show();
     }

@@ -16,15 +16,15 @@ public class SwipeVideoPlayPresenter {
     private static final String TAG = "SwipeVideoPlayPresenter";
     public SwipeVideoPlayInterface Interface;
     private int activePosition;
-    private List<GalleryItem> itemList = new ArrayList<>();
+    private final List<GalleryItem> itemList = new ArrayList<>();
     private boolean FILTER_ENABLE;
-    private List<String> labels = new ArrayList<>();
+    private final List<String> labels = new ArrayList<>();
 
     public FullScreenVideoAdapter getAdapter() {
         return adapter;
     }
 
-    private FullScreenVideoAdapter adapter;
+    private final FullScreenVideoAdapter adapter;
 
     public SwipeVideoPlayPresenter(SwipeVideoPlayInterface anInterface) {
         this.Interface = anInterface;

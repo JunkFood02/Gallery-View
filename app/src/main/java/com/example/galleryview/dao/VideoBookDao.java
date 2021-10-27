@@ -63,4 +63,10 @@ public interface VideoBookDao {
 
     @Query("DELETE FROM hiddenvideo")
     void deleteAllHiddenVideo();
+
+    @Query("DELETE FROM HiddenVideo WHERE id=:videoID")
+    void deleteHiddenVideoByID(long videoID);
+
+    @Update
+    void updateHiddenVideo(HiddenVideo video);
 }
