@@ -67,6 +67,7 @@ public class PhotoSelector {
             }
             cursor.close();
         }
+        Log.d(TAG, "getVideoPath: "+path);
         return path;
     }
 }

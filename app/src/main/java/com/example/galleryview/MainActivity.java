@@ -11,6 +11,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -241,6 +243,8 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
         });
         fadeIn = new AlphaAnimation(0.0f, 0.9f);
         fadeOut = new AlphaAnimation(0.9f, 0.0f);
+        MainActivityPresenter.setPrivateMode(false);
+        MainActivityPresenter.setEditorMode(false);
         coordinatorLayout = findViewById(R.id.CoordinatorLayout);
         clearAllButton = findViewById(R.id.deleteButton);
         selectButton.setOnClickListener(this);
@@ -262,6 +266,19 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
         View view = LayoutInflater.from(MainActivity.this).inflate(R.layout.password, null);
         TextInputEditText editText = view.findViewById(R.id.passwordEditText);
         TextInputLayout inputLayout = view.findViewById(R.id.passwordInputField);
+        editText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if(inputLayout.getError()!=null)
+                runOnUiThread(() -> inputLayout.setError(null));
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) { }
+        });
         AlertDialog.Builder builder = new AlertDialog.Builder(this)
                 .setTitle("Enable Private Mode")
                 .setMessage("Password need to be verified to gain access to private videos.")
@@ -295,6 +312,7 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
     private void EnterPrivateSpace() {
         presenter.showPrivateVideos();
         assert actionBar != null;
+        MainActivityPresenter.setPrivateMode(true);
         actionBar.setTitle("Private Space");
         filterButton.setVisibility(View.GONE);
         selectButton.setVisibility(View.GONE);

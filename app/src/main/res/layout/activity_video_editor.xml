@@ -5,12 +5,32 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".VideoEditorActivity">
-<TextView
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    app:layout_constraintTop_toTopOf="parent"
-    app:layout_constraintBottom_toBottomOf="parent"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintEnd_toEndOf="parent"
-    android:text="VideoEditorActivity"/>
+
+    <SeekBar
+        android:id="@+id/clipSeekBar"
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:max="15"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/clipProgress"
+        app:layout_constraintTop_toTopOf="parent" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toEndOf="@id/clipSeekBar"
+app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:text="0 sec"
+        android:id="@+id/clipProgress"/>
+
+    <Button
+        android:id="@+id/clipButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="make clip"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/clipSeekBar" />
 </androidx.constraintlayout.widget.ConstraintLayout>
