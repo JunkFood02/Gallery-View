@@ -37,7 +37,8 @@ public class MainActivityPresenter {
     private final List<String> labels = new ArrayList<>();
     static MainActivityInterface mainActivityInterface;
     private static boolean EditorModeEnable = false;
-    private static boolean PrivateModeEnable=false;
+    private static boolean PrivateModeEnable = false;
+
     public MainActivityPresenter(MainActivityInterface mainActivityInterface) {
         initLabels();
         MainActivityPresenter.mainActivityInterface = mainActivityInterface;
@@ -179,6 +180,10 @@ public class MainActivityPresenter {
 
     public static boolean isPrivateModeEnable() {
         return PrivateModeEnable;
+    }
+
+    public static void setPrivateMode(boolean b) {
+        PrivateModeEnable = b;
     }
 
     public void setAdapter(ItemAdapter adapter) {
