@@ -16,7 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.airbnb.lottie.LottieAnimationView;
 import com.example.galleryview.R;
 import com.example.galleryview.presenter.VideoController;
-import com.example.galleryview.model.GalleryItem;
+import com.example.galleryview.presenter.GalleryItem;
 import com.example.galleryview.presenter.SwipeVideoPlayPresenter;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.MediaItem;
@@ -51,7 +51,7 @@ public class FullScreenVideoAdapter extends RecyclerView.Adapter<FullScreenVideo
         controllers.put(Position, holder);
         GalleryItem currentItem = itemList.get(Position);
         holder.videoView.setPlayer(holder.player);
-        holder.videoTitle.setText("视频标题 " + (getItemCount() - Position - 1));
+        holder.videoTitle.setText("视频标题 " + Position);
         holder.updateHeartCount(currentItem.getIS_LIKED());
         MediaItem mediaItem = MediaItem.fromUri(currentItem.getImagePath());
         holder.player.setMediaItem(mediaItem);

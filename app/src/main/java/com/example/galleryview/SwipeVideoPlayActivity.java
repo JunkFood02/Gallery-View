@@ -1,28 +1,18 @@
 package com.example.galleryview;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.PagerSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.widget.TextView;
-import android.widget.VideoView;
 
-import com.example.galleryview.model.GalleryItem;
 import com.example.galleryview.presenter.SwipeVideoPlayInterface;
 import com.example.galleryview.presenter.SwipeVideoPlayPresenter;
 import com.example.galleryview.ui.ItemAdapter;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
 public class SwipeVideoPlayActivity extends MyActivity implements SwipeVideoPlayInterface {

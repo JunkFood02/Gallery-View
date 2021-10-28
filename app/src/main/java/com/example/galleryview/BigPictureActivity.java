@@ -12,7 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.bm.library.PhotoView;
-import com.example.galleryview.model.GalleryItem;
+import com.example.galleryview.presenter.GalleryItem;
 
 public class BigPictureActivity extends AppCompatActivity implements View.OnClickListener {
     VideoView videoView;

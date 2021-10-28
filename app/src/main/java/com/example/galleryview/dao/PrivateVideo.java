@@ -3,22 +3,22 @@ package com.example.galleryview.dao;
 import androidx.room.Entity;
 import androidx.room.Ignore;
 
-import com.example.galleryview.model.GalleryItem;
+import com.example.galleryview.presenter.GalleryItem;
 
 @Entity
-public class HiddenVideo extends Video {
-    public HiddenVideo(String path, int heartCount) {
+public class PrivateVideo extends Video {
+    public PrivateVideo(String path, int heartCount) {
         super(path, heartCount);
 
     }
 
     @Ignore
-    public HiddenVideo(Video v) {
+    public PrivateVideo(Video v) {
         super(v.path, v.heartCount);
     }
 
     @Ignore
-    public HiddenVideo(GalleryItem item) {
+    public PrivateVideo(GalleryItem item) {
         super(item);
     }
 }

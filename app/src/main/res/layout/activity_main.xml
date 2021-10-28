@@ -108,6 +108,7 @@
         >
 
         <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/editorModeSwitch"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:translationZ="10dp"

@@ -1,6 +1,7 @@
 package com.example.galleryview;
 
 import android.Manifest;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -11,11 +12,12 @@ import android.os.Bundle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
-import android.widget.EditText;
+import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -27,6 +29,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.app.ActivityCompat;
@@ -39,16 +42,20 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import com.bm.library.Info;
 import com.bm.library.PhotoView;
-import com.example.galleryview.model.GalleryItem;
+import com.example.galleryview.presenter.GalleryItem;
 import com.example.galleryview.presenter.MainActivityInterface;
 import com.example.galleryview.presenter.MainActivityPresenter;
 import com.example.galleryview.ui.ItemAdapter;
 import com.example.galleryview.ui.MyItemTouchHelperCallBack;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
 public class MainActivity extends MyActivity implements View.OnClickListener, MainActivityInterface {
@@ -67,9 +74,11 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
     Animation fadeIn, fadeOut;
     FrameLayout background;
     ItemTouchHelper touchHelper;
+    ActionBar actionBar;
     ItemTouchHelper.Callback callback;
     Toolbar toolbar;
     PhotoView photoView;
+    SwitchCompat switchCompat;
     MainActivityPresenter presenter;
     StaggeredGridLayoutManager layoutManager;
     public static final String BOOK_TITLE = "Gallery";
@@ -143,7 +152,7 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
                 */
             case filterButtonID:
                 boolean[] checkedItems = presenter.getShowLabels();
-                AlertDialog.Builder builder = new AlertDialog.Builder(this).setTitle("Choose labels to show").
+                MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this).setTitle("Choose labels to show").
                         setMultiChoiceItems(presenter.getLabels(), checkedItems, (dialog, which, isChecked) -> {
                         }).setPositiveButton("Apply", (dialog, which) -> {
                     presenter.updateLabels(checkedItems, 0);
@@ -159,7 +168,7 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
                 dialog.setPositiveButton("Confirm", (dialog1, which) -> {
                     presenter.clearAll();
                     presenter.getAdapter().clearList();
-                    Toast.makeText(this, "All images have been removed.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "All videos have been removed.", Toast.LENGTH_SHORT).show();
                     clearAllButton.setVisibility(View.INVISIBLE);
                 });
                 dialog.setNegativeButton("Cancel", (dialog12, which) -> {
@@ -210,7 +219,7 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
         drawerLayout = findViewById(R.id.drawerLayout);
         presenter = new MainActivityPresenter(this);
         setSupportActionBar(toolbar);
-        ActionBar actionBar = getSupportActionBar();
+        actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
             actionBar.setHomeButtonEnabled(true);
@@ -223,6 +232,13 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
         filterButton = findViewById(R.id.filterButton);
         photoView = findViewById(R.id.mainFullscreenImage);
         imageView = findViewById(R.id.imageView);
+        switchCompat = findViewById(R.id.editorModeSwitch);
+        switchCompat.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                MainActivityPresenter.setEditorMode(isChecked);
+            }
+        });
         fadeIn = new AlphaAnimation(0.0f, 0.9f);
         fadeOut = new AlphaAnimation(0.9f, 0.0f);
         coordinatorLayout = findViewById(R.id.CoordinatorLayout);
@@ -243,28 +259,47 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
         recyclerView.setAdapter(presenter.getAdapter());
         LoadImages();
         filterButton.setLongClickable(true);
+        View view = LayoutInflater.from(MainActivity.this).inflate(R.layout.password, null);
+        TextInputEditText editText = view.findViewById(R.id.passwordEditText);
+        TextInputLayout inputLayout = view.findViewById(R.id.passwordInputField);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this)
+                .setTitle("Enable Private Mode")
+                .setMessage("Password need to be verified to gain access to private videos.")
+                .setPositiveButton("Confirm", null)
+                .setNegativeButton("Cancel", (dialog1, which) -> {
+                })
+                .setView(view);
+        AlertDialog dialog = builder.create();
         filterButton.setOnLongClickListener(v -> {
-            EditText editText = new EditText(v.getContext());
-            AlertDialog.Builder builder = new AlertDialog.Builder(v.getContext());
-            builder.setTitle("Enter password to display hidden video").setView(editText);
-            builder.setPositiveButton("Confirm", (dialog, which) -> {
-                if (editText.getText().toString().equals("123456")) {
-                    Toast.makeText(v.getContext(), "Password correct", Toast.LENGTH_SHORT).show();
-                    //touchHelper.attachToRecyclerView(null);
-                    presenter.showHiddenVideos();
-                    assert actionBar != null;
-                    actionBar.setTitle("Hidden Video");
-                    filterButton.setVisibility(View.GONE);
-                    selectButton.setVisibility(View.GONE);
-                    clearAllButton.setVisibility(View.GONE);
-                } else
-                    Toast.makeText(v.getContext(), "Password Incorrect!", Toast.LENGTH_SHORT).show();
-            }).setNegativeButton("Cancel", (dialog, which) -> {
-            }).show();
+            dialog.show();
+            inputLayout.setError(null);
+            editText.setText(null);
+            dialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (Objects.requireNonNull(editText.getText()).toString().equals("123456")) {
+                        Toast.makeText(v.getContext(), "Password correct", Toast.LENGTH_SHORT).show();
+                        //touchHelper.attachToRecyclerView(null);
+                        EnterPrivateSpace();
+                        dialog.dismiss();
+                    } else {
+                        inputLayout.setError("Password Error");
+                    }
+                }
+            });
             return true;
         });
+
     }
 
+    private void EnterPrivateSpace() {
+        presenter.showPrivateVideos();
+        assert actionBar != null;
+        actionBar.setTitle("Private Space");
+        filterButton.setVisibility(View.GONE);
+        selectButton.setVisibility(View.GONE);
+        clearAllButton.setVisibility(View.GONE);
+    }
 
     @Override
     public void showUndoRemoveSnackbar(GalleryItem item, int Position) {
@@ -279,7 +314,7 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
 
     @Override
     public void showFilterChooseDialog(CharSequence[] items, boolean[] checkedItems, long videoID) {
-        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this)
                 .setCancelable(true)
                 .setTitle("Setting Label")
                 .setPositiveButton("Apply", (dialog, which) -> presenter.updateLabels(checkedItems, videoID))
@@ -341,7 +376,7 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
 
     @Override
     public void showUndoHideSnackbar() {
-        Snackbar.make(selectButton, "Video is unhidden now. You can see it after restart application.", Snackbar.LENGTH_SHORT)
+        Snackbar.make(selectButton, "Video is unhidden now. Restart the Activity to check.", Snackbar.LENGTH_SHORT)
                 .show();
     }
 
