@@ -1,40 +1,25 @@
 package com.example.galleryview.model;
 
-import static com.example.galleryview.MainActivity.BOOK_TITLE;
-import static com.example.galleryview.MainActivity.FILTER_BOOL_TITLE;
 import static com.example.galleryview.MyActivity.context;
 
 import android.annotation.SuppressLint;
-import android.content.ContentValues;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
-import android.widget.HeterogeneousExpandableList;
-import android.widget.ListView;
 
-import androidx.annotation.Nullable;
 import androidx.room.Room;
 
-import com.airbnb.lottie.L;
-import com.example.galleryview.MainActivity;
-import com.example.galleryview.R;
 import com.example.galleryview.dao.AppDatabase;
-import com.example.galleryview.dao.HiddenVideo;
+import com.example.galleryview.dao.PrivateVideo;
 import com.example.galleryview.dao.LabelRecord;
 import com.example.galleryview.dao.Video;
 import com.example.galleryview.dao.VideoBookDao;
+import com.example.galleryview.presenter.GalleryItem;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-
-import javax.security.auth.callback.Callback;
-
-import kotlin.jvm.Synchronized;
 
 public class DatabaseUtils {
     private static final ExecutorService exec = Executors.newCachedThreadPool();
@@ -56,7 +41,7 @@ public class DatabaseUtils {
         }
         return id;
     }
-    public static void deleteHiddenVideoByID(long id)
+    public static void deletePrivateVideoByID(long id)
     {
         new Thread(() -> dao.deleteHiddenVideoByID(id)).start();
     }
@@ -69,8 +54,8 @@ public class DatabaseUtils {
         new Thread(() -> dao.updateVideo(video)).start();
     }
 
-    public static void UpdateHiddenVideo(HiddenVideo hiddenVideo) {
-        new Thread(() -> dao.updateHiddenVideo(hiddenVideo)).start();
+    public static void UpdatePrivateVideo(PrivateVideo privateVideo) {
+        new Thread(() -> dao.updateHiddenVideo(privateVideo)).start();
     }
 
     public static List<Video> getAllVideoFromRoom() {
@@ -150,7 +135,7 @@ public class DatabaseUtils {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                dao.hideVideo(new HiddenVideo(dao.findVideoById(id)));
+                dao.hideVideo(new PrivateVideo(dao.findVideoById(id)));
                 deleteVideoByID(id);
                 cleanLabelsByVideoID(id);
             }
@@ -160,21 +145,21 @@ public class DatabaseUtils {
     public static void hideVideo(GalleryItem item)
     {
         new Thread(() -> {
-            dao.hideVideo(new HiddenVideo(item));
+            dao.hideVideo(new PrivateVideo(item));
             deleteVideoByID(item.getId());
             cleanLabelsByVideoID(item.getId());
         }).start();
     }
 
-    public static List<HiddenVideo> getHideVideos() {
-        List<HiddenVideo> hiddenVideos = new ArrayList<>();
-        Future<List<HiddenVideo>> future = exec.submit(() -> dao.getAllHiddenVideo());
+    public static List<PrivateVideo> getPrivateVideos() {
+        List<PrivateVideo> privateVideos = new ArrayList<>();
+        Future<List<PrivateVideo>> future = exec.submit(() -> dao.getAllHiddenVideo());
         try {
-            hiddenVideos = future.get();
+            privateVideos = future.get();
         } catch (ExecutionException | InterruptedException e) {
             e.printStackTrace();
         }
-        return hiddenVideos;
+        return privateVideos;
     }
 
 }

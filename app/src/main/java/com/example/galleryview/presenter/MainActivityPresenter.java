@@ -18,10 +18,9 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 
 import com.example.galleryview.MainActivity;
-import com.example.galleryview.dao.HiddenVideo;
+import com.example.galleryview.dao.PrivateVideo;
 import com.example.galleryview.dao.Video;
 import com.example.galleryview.model.DatabaseUtils;
-import com.example.galleryview.model.GalleryItem;
 import com.example.galleryview.model.PhotoSelector;
 import com.example.galleryview.ui.ItemAdapter;
 
@@ -33,12 +32,12 @@ public class MainActivityPresenter {
     private int position;
     private GalleryItem galleryItem;
     private Handler handler;
-
     private boolean[] ShowLabels;
     private final List<GalleryItem> galleryItemList = new ArrayList<>();
     private final List<String> labels = new ArrayList<>();
     static MainActivityInterface mainActivityInterface;
-
+    private static boolean EditorModeEnable = false;
+    private static boolean PrivateModeEnable=false;
     public MainActivityPresenter(MainActivityInterface mainActivityInterface) {
         initLabels();
         MainActivityPresenter.mainActivityInterface = mainActivityInterface;
@@ -51,10 +50,10 @@ public class MainActivityPresenter {
     }
 
     public void initLabels() {
-        labels.add("Default Label 1");
-        labels.add("Default Label 2");
-        labels.add("Default Label 3");
-        labels.add("Default Label 4");
+        labels.add("Default Label");
+        labels.add("Label 1");
+        labels.add("Label 2");
+        labels.add("Label 3");
         ShowLabels = new boolean[labels.size()];
     }
 
@@ -157,9 +156,9 @@ public class MainActivityPresenter {
         }).start();
     }
 
-    public void showHiddenVideos() {
+    public void showPrivateVideos() {
         adapter.clearList();
-        for (HiddenVideo v : DatabaseUtils.getHideVideos()
+        for (PrivateVideo v : DatabaseUtils.getPrivateVideos()
         ) {
             adapter.addImage(new GalleryItem(v));
         }
@@ -168,6 +167,18 @@ public class MainActivityPresenter {
     public void updateLabels(boolean[] checkedItems, long videoID) {
 
         DatabaseUtils.insertLabels(checkedItems, videoID);
+    }
+
+    public static boolean isEditorModeEnable() {
+        return EditorModeEnable;
+    }
+
+    public static void setEditorMode(boolean editorMode) {
+        EditorModeEnable = editorMode;
+    }
+
+    public static boolean isPrivateModeEnable() {
+        return PrivateModeEnable;
     }
 
     public void setAdapter(ItemAdapter adapter) {

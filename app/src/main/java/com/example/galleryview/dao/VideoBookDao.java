@@ -56,17 +56,17 @@ public interface VideoBookDao {
     void deleteSpecificLabelByID(long videoID, int labelID);
 
     @Insert
-    void hideVideo(HiddenVideo hiddenVideo);
+    void hideVideo(PrivateVideo privateVideo);
 
-    @Query("SELECT * FROM HiddenVideo")
-    List<HiddenVideo> getAllHiddenVideo();
+    @Query("SELECT * FROM PrivateVideo")
+    List<PrivateVideo> getAllHiddenVideo();
 
-    @Query("DELETE FROM hiddenvideo")
+    @Query("DELETE FROM PrivateVideo")
     void deleteAllHiddenVideo();
 
-    @Query("DELETE FROM HiddenVideo WHERE id=:videoID")
+    @Query("DELETE FROM PrivateVideo WHERE id=:videoID")
     void deleteHiddenVideoByID(long videoID);
 
     @Update
-    void updateHiddenVideo(HiddenVideo video);
+    void updateHiddenVideo(PrivateVideo video);
 }

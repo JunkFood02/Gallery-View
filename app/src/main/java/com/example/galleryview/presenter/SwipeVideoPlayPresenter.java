@@ -1,12 +1,10 @@
 package com.example.galleryview.presenter;
 
-import android.database.Cursor;
 import android.util.Log;
 
 import com.example.galleryview.dao.Video;
 import com.example.galleryview.ui.FullScreenVideoAdapter;
 import com.example.galleryview.model.DatabaseUtils;
-import com.example.galleryview.model.GalleryItem;
 
 import java.util.ArrayList;
 import java.util.List;

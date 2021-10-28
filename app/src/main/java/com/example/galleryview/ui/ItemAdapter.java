@@ -1,41 +1,35 @@
 package com.example.galleryview.ui;
 
-import static com.example.galleryview.model.DatabaseUtils.deleteHiddenVideoByID;
 import static com.example.galleryview.model.DatabaseUtils.insertVideo;
+import static com.example.galleryview.presenter.MainActivityPresenter.isEditorModeEnable;
+import static com.example.galleryview.presenter.MainActivityPresenter.isPrivateModeEnable;
 
-import android.app.AlertDialog;
-import android.content.DialogInterface;
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.media.MediaMetadataRetriever;
-import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
-import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.airbnb.lottie.LottieAnimationView;
-import com.bm.library.Info;
-import com.bm.library.PhotoView;
 import com.bumptech.glide.Glide;
 import com.example.galleryview.MainActivity;
 import com.example.galleryview.R;
 import com.example.galleryview.SwipeVideoPlayActivity;
+import com.example.galleryview.VideoEditorActivity;
 import com.example.galleryview.dao.Video;
 import com.example.galleryview.model.DatabaseUtils;
-import com.example.galleryview.model.GalleryItem;
-import com.google.android.exoplayer2.MediaItem;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.example.galleryview.presenter.GalleryItem;
 
 import java.io.File;
 import java.util.List;
@@ -47,11 +41,12 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
     public ViewHolder holder;
     public static List<GalleryItem> ItemList;
 
+    @SuppressLint("NotifyDataSetChanged")
     public void clearList() {
         while (!ItemList.isEmpty()) {
-            notifyItemRemoved(0);
             ItemList.remove(0);
         }
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -106,27 +101,31 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
             }
         });*/
         holder.cardView.setOnClickListener(v -> {
-
-            Intent intent = new Intent(v.getContext(), SwipeVideoPlayActivity.class);
-            intent.putExtra("position", holder.getLayoutPosition());
-            v.getContext().startActivity(intent);
-            //这里写进入短视频 Activity 的逻辑
-
-        });
-        holder.cardView.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                if (galleryItem.IS_HIDDEN()) return true;
-                Message message = handler.obtainMessage(MainActivity.SHOW_FILTER_CHOOSE_DIALOG);
-                message.obj = galleryItem;
-                handler.sendMessage(message);
-                return true;
+            Intent intent;
+            if (!isEditorModeEnable()) {
+                intent = new Intent(v.getContext(), SwipeVideoPlayActivity.class);
+                intent.putExtra("position", holder.getLayoutPosition());
+                //这里写进入短视频 Activity 的逻辑
             }
+            else{
+                intent=new Intent(v.getContext(), VideoEditorActivity.class);
+                intent.putExtra("path",galleryItem.getImagePath());
+                //进入视频编辑器 Activity
+            }
+            v.getContext().startActivity(intent);
+        });
+        holder.cardView.setOnLongClickListener(v -> {
+            if (isPrivateModeEnable() || isEditorModeEnable()) return true;
+            Message message = handler.obtainMessage(MainActivity.SHOW_FILTER_CHOOSE_DIALOG);
+            message.obj = galleryItem;
+            handler.sendMessage(message);
+            //长按弹出标签选择 Dialog
+            return true;
         });
     }
 
     public void addImage(GalleryItem galleryItem) {
-        insertImage(galleryItem, 0);
+        insertImage(galleryItem, getItemCount());
     }
 
     public void insertImage(GalleryItem galleryItem, int position) {
@@ -146,7 +145,7 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
         GalleryItem currentItem = ItemList.get(position);
         ItemList.remove(position);
         notifyItemRemoved(position);
-        if (!currentItem.IS_HIDDEN()) {
+        if (!isPrivateModeEnable()) {
             Log.d(TAG, "onItemDelete: id = " + currentItem.getId());
             DatabaseUtils.deleteVideoByID(currentItem.getId());
             Message message = handler.obtainMessage(MainActivity.UNDO_REMOVE_IMAGE);
@@ -154,7 +153,7 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
             message.arg1 = position;
             handler.sendMessage(message);
         } else {
-            DatabaseUtils.deleteHiddenVideoByID(currentItem.getId());
+            DatabaseUtils.deletePrivateVideoByID(currentItem.getId());
             Message message = handler.obtainMessage(MainActivity.REMOVE_HIDDEN_VIDEO);
             handler.sendMessage(message);
         }
@@ -166,12 +165,12 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
         Log.d(TAG, "onItemHidden: id = " + currentItem.getId());
         ItemList.remove(position);
         notifyItemRemoved(position);
-        if (!currentItem.IS_HIDDEN()) {
+        if (!isPrivateModeEnable()) {
             DatabaseUtils.hideVideo(currentItem);
             Message message = handler.obtainMessage(MainActivity.HIDE_VIDEO);
             handler.sendMessage(message);
         } else {
-            DatabaseUtils.deleteHiddenVideoByID(currentItem.getId());
+            DatabaseUtils.deletePrivateVideoByID(currentItem.getId());
             Video video = new Video(currentItem);
             currentItem.setId(insertVideo(video));
             DatabaseUtils.insertLabel(0, currentItem.getId());
