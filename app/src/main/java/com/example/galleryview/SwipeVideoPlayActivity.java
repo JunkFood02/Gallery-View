@@ -9,7 +9,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
 
-import com.example.galleryview.presenter.SwipeVideoPlayInterface;
+import com.example.galleryview.ui.SwipeVideoPlayInterface;
 import com.example.galleryview.presenter.SwipeVideoPlayPresenter;
 import com.example.galleryview.ui.ItemAdapter;
 
@@ -43,7 +43,6 @@ public class SwipeVideoPlayActivity extends MyActivity implements SwipeVideoPlay
         recyclerView = findViewById(R.id.VideoRecyclerView);
         presenter = new SwipeVideoPlayPresenter(this);
         presenter.setActivePosition(position);
-        //presenter.getVideoFromDatabase(false);
         presenter.getVideoFromItemList(ItemAdapter.ItemList);
         recyclerView.setAdapter(presenter.getAdapter());
         layoutManager = new LinearLayoutManager(MyActivity.context, RecyclerView.VERTICAL, false);
@@ -61,8 +60,10 @@ public class SwipeVideoPlayActivity extends MyActivity implements SwipeVideoPlay
                     presenter.setActivePosition(currentPosition);
                     Log.d(TAG, "onScrollStateChanged: currentPosition=" + currentPosition);
                     presenter.getAdapter().VideoStart(currentPosition);
+                    //当滚动停止时 使当前位置视频开始播放 即实现滑动后自动播放
+                    //使用滑动停止的状态就可以不用判断上滑或是下滑
                 } else if (newState == RecyclerView.SCREEN_STATE_ON) {
-                    presenter.getAdapter().VideoStop();
+                    presenter.getAdapter().VideoStop();//当滑动开始时 使所有位置视频停止播放
                 }
             }
 
@@ -84,7 +85,7 @@ public class SwipeVideoPlayActivity extends MyActivity implements SwipeVideoPlay
     @Override
     protected void onPause() {
         super.onPause();
-        presenter.getAdapter().VideoStop();
+        presenter.getAdapter().VideoStop();//锁屏时停止播放
     }
 
     @Override

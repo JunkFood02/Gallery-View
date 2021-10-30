@@ -44,8 +44,7 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import com.bm.library.Info;
 import com.bm.library.PhotoView;
-import com.example.galleryview.presenter.GalleryItem;
-import com.example.galleryview.presenter.MainActivityInterface;
+import com.example.galleryview.ui.MainActivityInterface;
 import com.example.galleryview.presenter.MainActivityPresenter;
 import com.example.galleryview.ui.ItemAdapter;
 import com.example.galleryview.ui.MyItemTouchHelperCallBack;
@@ -70,7 +69,6 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
     ActivityResultLauncher<Intent> launcher_album;
     RecyclerView recyclerView;
     CoordinatorLayout coordinatorLayout;
-    ListView listView;
     ImageView imageView;
     List<String> strings = new ArrayList<>();
     Animation fadeIn, fadeOut;
@@ -83,8 +81,6 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
     SwitchCompat switchCompat;
     MainActivityPresenter presenter;
     StaggeredGridLayoutManager layoutManager;
-    public static final String BOOK_TITLE = "Gallery";
-    public static final String FILTER_BOOL_TITLE = "Filters";
     private static final String TAG = "MainActivity";
     public static final int SHOW_FULLSCREEN_IMAGE = 1;
     public static final int SHOW_FILTER_CHOOSE_DIALOG = 2;
@@ -105,7 +101,7 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
             e.printStackTrace();
         }
 
-        launcher_album = registerForActivityResult(
+        launcher_album = registerForActivityResult( //从文件管理获取视频uri
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     Log.d(TAG, "onActivityResult: ");
@@ -179,7 +175,7 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
         }
     }
 
-    private void selectImage() {
+    private void selectImage() { //获取授权
         if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
         } else {
@@ -239,6 +235,7 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 MainActivityPresenter.setEditorMode(isChecked);
+                //简陋的侧边栏里简陋的开关用于打开视频编辑模式
             }
         });
         fadeIn = new AlphaAnimation(0.0f, 0.9f);
@@ -252,11 +249,10 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
         selectButton.setLongClickable(true);
         selectButton.setOnLongClickListener(v -> {
             Snackbar.make(selectButton, "You've long pressed this button.", Snackbar.LENGTH_SHORT).show();
-            clearAllButton.setVisibility(View.VISIBLE);
+            clearAllButton.setVisibility(View.VISIBLE); //长按添加按钮显示隐藏的清空按钮
             return true;
         });
         clearAllButton.setOnClickListener(this);
-        presenter.setAdapter(new ItemAdapter(presenter.getGalleryItemList(), presenter.getHandler()));
         callback = new MyItemTouchHelperCallBack(presenter.getAdapter());
         touchHelper = new ItemTouchHelper(callback);
         touchHelper.attachToRecyclerView(recyclerView);
@@ -264,20 +260,22 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
         LoadImages();
         filterButton.setLongClickable(true);
         View view = LayoutInflater.from(MainActivity.this).inflate(R.layout.password, null);
-        TextInputEditText editText = view.findViewById(R.id.passwordEditText);
+        TextInputEditText passwordEditText = view.findViewById(R.id.passwordEditText);
         TextInputLayout inputLayout = view.findViewById(R.id.passwordInputField);
-        editText.addTextChangedListener(new TextWatcher() {
+        passwordEditText.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if(inputLayout.getError()!=null)
-                runOnUiThread(() -> inputLayout.setError(null));
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
 
             @Override
-            public void afterTextChanged(Editable s) { }
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (inputLayout.getError() != null)
+                    runOnUiThread(() -> inputLayout.setError(null));
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
         });
         AlertDialog.Builder builder = new AlertDialog.Builder(this)
                 .setTitle("Enable Private Mode")
@@ -286,19 +284,19 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
                 .setNegativeButton("Cancel", (dialog1, which) -> {
                 })
                 .setView(view);
-        AlertDialog dialog = builder.create();
-        filterButton.setOnLongClickListener(v -> {
-            dialog.show();
+        AlertDialog filterChooseDialog = builder.create();
+        filterButton.setOnLongClickListener(v -> { //长按标签按钮可以输入密码访问隐藏的小视频
+            filterChooseDialog.show();
             inputLayout.setError(null);
-            editText.setText(null);
-            dialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+            passwordEditText.setText(null);
+            filterChooseDialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (Objects.requireNonNull(editText.getText()).toString().equals("123456")) {
+                    if (Objects.requireNonNull(passwordEditText.getText()).toString().equals("123456")) {
                         Toast.makeText(v.getContext(), "Password correct", Toast.LENGTH_SHORT).show();
                         //touchHelper.attachToRecyclerView(null);
                         EnterPrivateSpace();
-                        dialog.dismiss();
+                        filterChooseDialog.dismiss();
                     } else {
                         inputLayout.setError("Password Error");
                     }
@@ -310,13 +308,25 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
     }
 
     private void EnterPrivateSpace() {
-        presenter.showPrivateVideos();
-        assert actionBar != null;
         MainActivityPresenter.setPrivateMode(true);
-        actionBar.setTitle("Private Space");
+        presenter.showPrivateVideos();
+        if (actionBar != null) actionBar.setTitle("Private Space");
         filterButton.setVisibility(View.GONE);
         selectButton.setVisibility(View.GONE);
         clearAllButton.setVisibility(View.GONE);
+    }
+
+
+    @Override
+    public void showFilterChooseDialog(CharSequence[] items, boolean[] checkedItems, long videoID) {
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this)
+                .setCancelable(true)
+                .setTitle("Setting Label")
+                .setPositiveButton("Apply", (dialog, which) -> presenter.updateLabels(checkedItems, videoID))
+                .setNegativeButton("Cancel", (dialog, which) -> {
+                }).setMultiChoiceItems(items, checkedItems, (dialog, which, isChecked) -> {
+                });
+        builder.show();
     }
 
     @Override
@@ -331,26 +341,37 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
     }
 
     @Override
-    public void showFilterChooseDialog(CharSequence[] items, boolean[] checkedItems, long videoID) {
-        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this)
-                .setCancelable(true)
-                .setTitle("Setting Label")
-                .setPositiveButton("Apply", (dialog, which) -> presenter.updateLabels(checkedItems, videoID))
-                .setNegativeButton("Cancel", (dialog, which) -> {
-                }).setMultiChoiceItems(items, checkedItems, (dialog, which, isChecked) -> {
-                });
-        listView = builder.show().getListView();
-
-    }
-
-    @Override
     public void showRemoveHiddenVideoSnackbar() {
         Snackbar.make(selectButton, "This Video has been remove.", Snackbar.LENGTH_SHORT)
                 .show();
     }
 
+
+    @Override
+    public void showUndoHideSnackbar() {
+        Snackbar.make(selectButton, "Video is unhidden now. Restart the Activity to check.", Snackbar.LENGTH_SHORT)
+                .show();
+    }
+
+    @Override
+    public void showHideSnackbar() {
+        Snackbar.make(selectButton, "Video has been hidden.", Snackbar.LENGTH_SHORT)
+                .show();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            drawerLayout.closeDrawer(GravityCompat.START);
+        } else if (photoView.getVisibility() == View.VISIBLE)
+            hideFullscreenPhoto();
+        else {
+            super.onBackPressed();
+        }
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.O)
-    public void showFullscreenPhoto(String path, Info imageInfo) {
+    public void showFullscreenPhoto(String path, Info imageInfo) { //还没来得及移除的图片展示功能
         Log.d(TAG, path);
         drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
         photoView = findViewById(R.id.mainFullscreenImage);
@@ -392,34 +413,11 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
         }
     }
 
-    @Override
-    public void showUndoHideSnackbar() {
-        Snackbar.make(selectButton, "Video is unhidden now. Restart the Activity to check.", Snackbar.LENGTH_SHORT)
-                .show();
-    }
-
-    @Override
-    public void showHideSnackbar() {
-        Snackbar.make(selectButton, "Video has been hidden.", Snackbar.LENGTH_SHORT)
-                .show();
-    }
-
     public void hideFullscreenPhoto() {
         photoView.destroyDrawingCache();
         drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
         backgroundChange();
         photoView.animaTo(info, () -> photoView.setVisibility(View.INVISIBLE));
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            drawerLayout.closeDrawer(GravityCompat.START);
-        } else if (photoView.getVisibility() == View.VISIBLE)
-            hideFullscreenPhoto();
-        else {
-            super.onBackPressed();
-        }
     }
 
     public void backgroundChange() {

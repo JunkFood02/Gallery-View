@@ -1,4 +1,4 @@
-package com.example.galleryview.presenter;
+package com.example.galleryview.ui;
 
 public interface VideoController {
 void noticeVideoStart();

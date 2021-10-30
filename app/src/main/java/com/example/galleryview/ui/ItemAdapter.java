@@ -29,7 +29,7 @@ import com.example.galleryview.SwipeVideoPlayActivity;
 import com.example.galleryview.VideoEditorActivity;
 import com.example.galleryview.dao.Video;
 import com.example.galleryview.model.DatabaseUtils;
-import com.example.galleryview.presenter.GalleryItem;
+import com.example.galleryview.GalleryItem;
 
 import java.io.File;
 import java.util.List;
@@ -63,13 +63,6 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
         ItemList = itemList;
     }
 
-    private Bitmap createThumbnailAtTime(String filePath, int timeInSeconds) {
-        MediaMetadataRetriever mMMR = new MediaMetadataRetriever();
-        mMMR.setDataSource(filePath);
-        //api time unit is microseconds
-        return mMMR.getFrameAtTime(timeInSeconds * 1000000L, MediaMetadataRetriever.OPTION_CLOSEST);
-    }
-
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         GalleryItem galleryItem = ItemList.get(holder.getLayoutPosition());
@@ -79,9 +72,9 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
             Glide.with(MainActivity.getContext()).load(new File(galleryItem.getImagePath())).into(holder.imageView);
             holder.textView.setText("Image Title " + holder.getLayoutPosition());
         } else {
-            //galleryItem.setBitmap(createThumbnailAtTime(galleryItem.getImagePath(), 1));//生成第一秒的截图
             holder.textView.setText("Video Title " + holder.getLayoutPosition());
             Glide.with(holder.imageView).load((galleryItem.getImagePath())).into(holder.imageView);
+            //使用 Glide 生成视频缩略图
         }
         //Toast.makeText(MainActivity.getContext(), "Failed to get bitmap.", Toast.LENGTH_SHORT).show();
 
@@ -105,11 +98,10 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
             if (!isEditorModeEnable()) {
                 intent = new Intent(v.getContext(), SwipeVideoPlayActivity.class);
                 intent.putExtra("position", holder.getLayoutPosition());
-                //这里写进入短视频 Activity 的逻辑
-            }
-            else{
-                intent=new Intent(v.getContext(), VideoEditorActivity.class);
-                intent.putExtra("path",galleryItem.getImagePath());
+                //进入短视频 Activity
+            } else {
+                intent = new Intent(v.getContext(), VideoEditorActivity.class);
+                intent.putExtra("path", galleryItem.getImagePath());
                 //进入视频编辑器 Activity
             }
             v.getContext().startActivity(intent);
@@ -119,7 +111,7 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
             Message message = handler.obtainMessage(MainActivity.SHOW_FILTER_CHOOSE_DIALOG);
             message.obj = galleryItem;
             handler.sendMessage(message);
-            //长按弹出标签选择 Dialog
+            //长按 CardView 弹出标签选择 Dialog
             return true;
         });
     }
@@ -145,7 +137,7 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
         GalleryItem currentItem = ItemList.get(position);
         ItemList.remove(position);
         notifyItemRemoved(position);
-        if (!isPrivateModeEnable()) {
+        if (!isPrivateModeEnable()) { //非隐私状态下左滑删除可undo 隐私状态下懒得写了就没写
             Log.d(TAG, "onItemDelete: id = " + currentItem.getId());
             DatabaseUtils.deleteVideoByID(currentItem.getId());
             Message message = handler.obtainMessage(MainActivity.UNDO_REMOVE_IMAGE);
@@ -165,11 +157,11 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
         Log.d(TAG, "onItemHidden: id = " + currentItem.getId());
         ItemList.remove(position);
         notifyItemRemoved(position);
-        if (!isPrivateModeEnable()) {
+        if (!isPrivateModeEnable()) { //非隐私状态下右滑为隐藏视频
             DatabaseUtils.hideVideo(currentItem);
             Message message = handler.obtainMessage(MainActivity.HIDE_VIDEO);
             handler.sendMessage(message);
-        } else {
+        } else { //隐私状态下右滑为取消隐藏视频
             DatabaseUtils.deletePrivateVideoByID(currentItem.getId());
             Video video = new Video(currentItem);
             currentItem.setId(insertVideo(video));

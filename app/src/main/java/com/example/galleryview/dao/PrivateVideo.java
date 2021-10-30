@@ -3,7 +3,7 @@ package com.example.galleryview.dao;
 import androidx.room.Entity;
 import androidx.room.Ignore;
 
-import com.example.galleryview.presenter.GalleryItem;
+import com.example.galleryview.GalleryItem;
 
 @Entity
 public class PrivateVideo extends Video {

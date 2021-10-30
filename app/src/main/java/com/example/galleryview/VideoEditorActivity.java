@@ -1,47 +1,83 @@
 package com.example.galleryview;
 
-import androidx.appcompat.app.AppCompatActivity;
+import static com.example.galleryview.presenter.VideoEditorPresenter.PROCESS_CANCEL;
+import static com.example.galleryview.presenter.VideoEditorPresenter.PROCESS_FAILURE;
+import static com.example.galleryview.presenter.VideoEditorPresenter.PROCESS_SUCCESS;
 
 import android.app.ProgressDialog;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
-import android.text.InputType;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.galleryview.dao.Video;
-import com.example.galleryview.model.DatabaseUtils;
-import com.example.galleryview.ui.ItemAdapter;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 
-import VideoHandle.EpEditor;
-import VideoHandle.EpVideo;
-import VideoHandle.OnEditorListener;
+import com.example.galleryview.presenter.VideoEditorPresenter;
+import com.example.galleryview.ui.VideoEditorInterface;
+import com.google.android.exoplayer2.MediaItem;
+import com.google.android.exoplayer2.Player;
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.ui.PlayerView;
 
-public class VideoEditorActivity extends MyActivity implements View.OnClickListener {
-    String path;
-    SeekBar seekBar;
-    Button button;
-    TextView textView;
+public class VideoEditorActivity extends MyActivity implements View.OnClickListener, VideoEditorInterface {
     private static final String TAG = "VideoEditorActivity";
+    String path;
+    SeekBar lengthSeekBar, beginSeekBar;
+    Button clipButton, BGMButton;
+    ActivityResultLauncher<Intent> launcherForBGM;
+    TextView lengthText, beginPointText;
+    ProgressDialog dialog;
+    PlayerView playerView;
+    SimpleExoPlayer player;
+    private int videoLength;
+    private VideoEditorPresenter presenter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_video_editor);
         path = getIntent().getStringExtra("path");
-        seekBar = findViewById(R.id.clipSeekBar);
-        button = findViewById(R.id.clipButton);
-        textView = findViewById(R.id.clipProgress);
-        button.setOnClickListener(this);
-        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        presenter = new VideoEditorPresenter(this);
+        lengthSeekBar = findViewById(R.id.clipSeekBar);
+        clipButton = findViewById(R.id.clipButton);
+        BGMButton = findViewById(R.id.BGMButton);
+        lengthText = findViewById(R.id.clipProgress);
+        beginPointText = findViewById(R.id.beginPoint);
+        beginSeekBar = findViewById(R.id.beginSeekBar);
+        BGMButton.setOnClickListener(this);
+        clipButton.setOnClickListener(this);
+        playerView = findViewById(R.id.editorVideoView);
+        MediaItem mediaItem = MediaItem.fromUri(path);
+        player = new SimpleExoPlayer.Builder(this).build();
+        playerView.setPlayer(player);
+        player.setMediaItem(mediaItem);
+        player.setPlayWhenReady(true);
+        player.pause();
+        player.prepare();
+        player.addListener(new Player.Listener() {
+            @Override
+            public void onPlaybackStateChanged(int playbackState) {
+                if (playbackState == Player.STATE_READY) {
+                    videoLength = (int) (player.getDuration() / 1000);
+                    beginSeekBar.setMax(videoLength);
+                    Log.d(TAG, "Duration = " + videoLength);
+                }
+            }
+        });
+
+        beginSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                setTextViewProgress(progress);
+                runOnUiThread(() -> {
+                    beginPointText.setText("begin: " + progress + " sec");
+                    lengthSeekBar.setMax(videoLength - progress); //剪辑长度不能超过视频长度
+                });
             }
 
             @Override
@@ -53,49 +89,68 @@ public class VideoEditorActivity extends MyActivity implements View.OnClickListe
 
             }
         });
+        lengthSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                runOnUiThread(() -> lengthText.setText("length: " + progress + " sec"));
+            }
 
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
 
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
+        launcherForBGM = registerForActivityResult( //从文件管理获取音乐uri
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    Log.d(TAG, "onActivityResult: ");
+                    if (result.getResultCode() == RESULT_OK) {
+                        assert result.getData() != null;
+                        Uri uri = Uri.parse(result.getData().toUri(Intent.URI_ALLOW_UNSAFE));
+                        Toast.makeText(this, VideoEditorPresenter.getAudioPath(uri), Toast.LENGTH_SHORT).show();
+                        //加背景音乐的 FFmpeg 命令还没有写 所以先弹个 Toast
+                    }
+                });
     }
-    private void setTextViewProgress(int progress)
-    {runOnUiThread(() -> textView.setText(progress+" sec"));}
+
 
     @Override
     public void onClick(View v) {
+        final int clipButtonID = R.id.clipButton, selectMusicButton = R.id.BGMButton;
+        switch (v.getId()) {
+            case clipButtonID:
+                dialog = new ProgressDialog(v.getContext());
+                dialog.setTitle("Clip progressing");
+                dialog.setCancelable(true);
+                //dialog.setMessage(RxFFmpegInvoke.getInstance().getMediaInfo(path));
+                dialog.show();
+                presenter.makeVideoClip(path, beginSeekBar.getProgress(), lengthSeekBar.getProgress());
+                break;
+            case selectMusicButton:
+                Intent intent = new Intent("android.intent.action.GET_CONTENT");
+                intent.setType("audio/*");
+                launcherForBGM.launch(intent);
+                break;
+        }
 
-        ProgressDialog dialog = new ProgressDialog(v.getContext());
-        dialog.setTitle("Clip progressing");
-        dialog.setCancelable(false);
-        dialog.show();
-        EpVideo epVideo = new EpVideo(path);
-        Log.d(TAG, "onClick: " + path);
-        epVideo.clip(0, (float) seekBar.getProgress());
-        String builder = path + "_clip.mp4";
-        EpEditor.OutputOption outputOption = new EpEditor.OutputOption(builder);
-        EpEditor.exec(epVideo, outputOption, new OnEditorListener() {
-            @Override
-            public void onSuccess() {
-                Log.d(TAG, "onSuccess: ");
-                runOnUiThread(() -> {
-                    Toast.makeText(context, "Success", Toast.LENGTH_SHORT).show();
-                    dialog.dismiss();
-                });
-                DatabaseUtils.insertVideo(new Video(builder,0));
-            }
+    }
 
-            @Override
-            public void onFailure() {
-                Log.d(TAG, "onFailure: ");
-
-                runOnUiThread(() -> {
-                    Toast.makeText(context, "Failure", Toast.LENGTH_SHORT).show();
-                    dialog.dismiss();
-                });
-            }
-
-            @Override
-            public void onProgress(float progress) {
-                Log.d(TAG, "onProgress: ");
-            }
-        });
+    @Override
+    public void onProcessFinish(int code) {
+        dialog.dismiss();
+        switch (code) {
+            case PROCESS_SUCCESS:
+                Toast.makeText(context, "Success", Toast.LENGTH_SHORT).show();
+                break;
+            case PROCESS_CANCEL:
+                Toast.makeText(context, "Cancel", Toast.LENGTH_SHORT).show();
+                break;
+            case PROCESS_FAILURE:
+                Toast.makeText(context, "Failure", Toast.LENGTH_SHORT).show();
+                break;
+        }
     }
 }

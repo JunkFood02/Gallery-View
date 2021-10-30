@@ -12,7 +12,7 @@ import com.example.galleryview.dao.PrivateVideo;
 import com.example.galleryview.dao.LabelRecord;
 import com.example.galleryview.dao.Video;
 import com.example.galleryview.dao.VideoBookDao;
-import com.example.galleryview.presenter.GalleryItem;
+import com.example.galleryview.GalleryItem;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -131,16 +131,6 @@ public class DatabaseUtils {
         return videos;
     }
 
-    public static void hideVideoByID(long id) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                dao.hideVideo(new PrivateVideo(dao.findVideoById(id)));
-                deleteVideoByID(id);
-                cleanLabelsByVideoID(id);
-            }
-        }).start();
-    }
 
     public static void hideVideo(GalleryItem item)
     {

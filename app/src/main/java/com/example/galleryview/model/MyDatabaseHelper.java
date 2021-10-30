@@ -5,6 +5,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 public class MyDatabaseHelper extends SQLiteOpenHelper {
+    //还没来得及移除的 SQLite
     public static final String CREATE_BOOK = "create table Gallery  ("
             + "id integer primary key autoincrement, "
             + "imagepath text, "
