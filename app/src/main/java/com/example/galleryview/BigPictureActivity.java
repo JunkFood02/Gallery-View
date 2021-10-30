@@ -12,9 +12,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.bm.library.PhotoView;
-import com.example.galleryview.presenter.GalleryItem;
 
 public class BigPictureActivity extends AppCompatActivity implements View.OnClickListener {
+    //这里的代码没用 别看
     VideoView videoView;
     PhotoView fullscreenImage;
     @Override

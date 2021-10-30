@@ -1,4 +1,4 @@
-package com.example.galleryview.presenter;
+package com.example.galleryview;
 
 import static com.example.galleryview.presenter.MainActivityPresenter.isPrivateModeEnable;
 
@@ -10,13 +10,11 @@ import com.example.galleryview.model.DatabaseUtils;
 
 
 public class GalleryItem {
-    private String imagePath;
+    private final String imagePath;
     private static final String TAG = "GalleryItem";
-    private int type;
-    private long id;
-    private int heartCount = 0;
-    private String label = null;
-    Bitmap bitmap;
+    private int type; //媒体类型
+    private long id; //在数据库中的id
+    private int heartCount = 0; //点赞数
     public static final int TYPE_IMAGE = 1;
     public static final int TYPE_VIDEO = 2;
 
@@ -68,19 +66,12 @@ public class GalleryItem {
         this.id = id;
     }
 
-    public String getLabel() {
-        return label;
-    }
 
-    public void setLabel(String label) {
-        this.label = label;
-    }
-
-    public GalleryItem(String imagePath, int type, long id, int IS_LIKED) {
+    public GalleryItem(String imagePath, int type, long id, int heartCount) {
         this.imagePath = imagePath;
         this.type = type;
         this.id = id;
-        this.heartCount = IS_LIKED;
+        this.heartCount = heartCount;
     }
 
     public GalleryItem(String imagePath, long id, int heartCount) {
@@ -105,16 +96,4 @@ public class GalleryItem {
         return imagePath;
     }
 
-
-    public Bitmap getBitmap() {
-        return bitmap;
-    }
-
-    public void setBitmap(Bitmap bitmap) {
-        this.bitmap = bitmap;
-    }
-
-    public void setImagePath(String imagePath) {
-        this.imagePath = imagePath;
-    }
 }

@@ -26,6 +26,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class HttpUtils {
+    //这里也是没用的代码 别看！
     private static final String TAG = "HttpUtils";
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)

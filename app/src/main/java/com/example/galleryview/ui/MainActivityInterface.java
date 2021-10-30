@@ -1,6 +1,7 @@
-package com.example.galleryview.presenter;
+package com.example.galleryview.ui;
 
 import com.bm.library.Info;
+import com.example.galleryview.GalleryItem;
 
 public interface MainActivityInterface {
     void insertNewImage(GalleryItem newItem);

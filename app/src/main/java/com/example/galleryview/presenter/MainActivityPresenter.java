@@ -17,12 +17,14 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
+import com.example.galleryview.GalleryItem;
 import com.example.galleryview.MainActivity;
 import com.example.galleryview.dao.PrivateVideo;
 import com.example.galleryview.dao.Video;
 import com.example.galleryview.model.DatabaseUtils;
 import com.example.galleryview.model.PhotoSelector;
 import com.example.galleryview.ui.ItemAdapter;
+import com.example.galleryview.ui.MainActivityInterface;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,15 +41,11 @@ public class MainActivityPresenter {
     private static boolean EditorModeEnable = false;
     private static boolean PrivateModeEnable = false;
 
-    public MainActivityPresenter(MainActivityInterface mainActivityInterface) {
+    public MainActivityPresenter(MainActivityInterface mainActivity) {
         initLabels();
-        MainActivityPresenter.mainActivityInterface = mainActivityInterface;
+        MainActivityPresenter.mainActivityInterface = mainActivity;
         setupHandler();
-
-    }
-
-    public List<GalleryItem> getGalleryItemList() {
-        return galleryItemList;
+        adapter=new ItemAdapter(galleryItemList, handler);
     }
 
     public void initLabels() {
@@ -108,7 +106,7 @@ public class MainActivityPresenter {
         return labels.toArray(new CharSequence[0]);
     }
 
-    public void reArrangeAdapter(boolean[] checkedItems) {
+    public void reArrangeAdapter(boolean[] checkedItems) { //通过选取的标签在数据库中搜索视频 并重新展示
         List<Long> ids = new ArrayList<>();
         for (int i = 0; i < labels.size(); i++)
             if (checkedItems[i])
@@ -121,7 +119,7 @@ public class MainActivityPresenter {
     }
 
     private void setupHandler() {
-        new Thread(() -> handler = new Handler(getMainLooper()) {
+        handler = new Handler(getMainLooper()) {
             @Override
             public void handleMessage(@NonNull Message msg) {
                 super.handleMessage(msg);
@@ -130,7 +128,7 @@ public class MainActivityPresenter {
                         position = msg.arg1;
                         galleryItem = (GalleryItem) msg.obj;
                         //mainActivityInterface.showFullscreenPhoto(galleryItem.getImagePath(), info);
-                        //这里是暂时被禁用的展开大图
+                        //这里没来得及移除的展开大图
                         break;
                     case UNDO_REMOVE_IMAGE:
                         galleryItem = (GalleryItem) msg.obj;
@@ -154,7 +152,7 @@ public class MainActivityPresenter {
                         mainActivityInterface.showRemoveHiddenVideoSnackbar();
                 }
             }
-        }).start();
+        };
     }
 
     public void showPrivateVideos() {
@@ -184,10 +182,6 @@ public class MainActivityPresenter {
 
     public static void setPrivateMode(boolean b) {
         PrivateModeEnable = b;
-    }
-
-    public void setAdapter(ItemAdapter adapter) {
-        MainActivityPresenter.adapter = adapter;
     }
 
     public ItemAdapter getAdapter() {

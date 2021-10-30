@@ -5,7 +5,7 @@ import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
-import com.example.galleryview.presenter.GalleryItem;
+import com.example.galleryview.GalleryItem;
 
 @Entity
 public class Video {

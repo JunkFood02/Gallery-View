@@ -46,6 +46,28 @@ public class PhotoSelector {
         return imagePath;
     }
 
+    public static String AudioUriToPath(Uri uri) {
+        String path = null;
+        if (DocumentsContract.isDocumentUri(MainActivity.context, uri)) {
+            String docID = DocumentsContract.getDocumentId(uri);
+            Log.d(TAG, "getDocumentId(uri) :" + docID);
+            if ("com.android.providers.media.documents".equals(uri.getAuthority())) {
+                String id = docID.split(":")[1];
+                String selection = MediaStore.Images.Media._ID + "=" + id;
+                path = getImagePath(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, selection);
+
+            } else if ("com.android.providers.downloads.documents".equals(uri.getAuthority())) {
+                Uri contentUri = ContentUris.withAppendedId(Uri.parse("content://downloads/public_downloads"), Long.parseLong(docID));
+                path = getMusicPath(contentUri, null);
+            }
+        } else if ("content".equalsIgnoreCase(uri.getScheme())) {
+            path = getMusicPath(uri, null);
+        } else if ("file".equalsIgnoreCase(uri.getScheme())) {
+            path = uri.getPath();
+        }
+        return path;
+    }
+
     private static String getImagePath(Uri uri, String selection) {
         String path = null;
         Cursor cursor = MainActivity.context.getContentResolver().query(uri, null, selection, null, null);
@@ -67,7 +89,20 @@ public class PhotoSelector {
             }
             cursor.close();
         }
-        Log.d(TAG, "getVideoPath: "+path);
+        Log.d(TAG, "getVideoPath: " + path);
+        return path;
+    }
+
+    private static String getMusicPath(Uri uri, String selection) {
+        String path = null;
+        Cursor cursor = MainActivity.context.getContentResolver().query(uri, null, selection, null, null);
+        if (cursor != null) {
+            if (cursor.moveToNext()) {
+                path = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA));
+            }
+            cursor.close();
+        }
+        Log.d(TAG, "getMusicPath: " + path);
         return path;
     }
 }

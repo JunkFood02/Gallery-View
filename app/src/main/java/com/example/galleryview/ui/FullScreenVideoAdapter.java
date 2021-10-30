@@ -15,8 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.airbnb.lottie.LottieAnimationView;
 import com.example.galleryview.R;
-import com.example.galleryview.presenter.VideoController;
-import com.example.galleryview.presenter.GalleryItem;
+import com.example.galleryview.GalleryItem;
 import com.example.galleryview.presenter.SwipeVideoPlayPresenter;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.MediaItem;
@@ -35,6 +34,8 @@ public class FullScreenVideoAdapter extends RecyclerView.Adapter<FullScreenVideo
     private static final String TAG = "FullScreenVideoAdapter";
     private List<GalleryItem> itemList;
     private final Map<Integer, VideoController> controllers = new HashMap<>();
+    // 因为实在搞不懂 RecyclerView 的回收缓存机制 所以用了这种取巧的方法
+    // 将每个 ViewHolder 与其位置的建立映射加入 map 方便调用
 
     @NonNull
     @Override
@@ -61,7 +62,7 @@ public class FullScreenVideoAdapter extends RecyclerView.Adapter<FullScreenVideo
         holder.player.addListener(new Player.Listener() {
             @Override
             public void onPlaybackStateChanged(int playbackState) {
-                if (playbackState == ExoPlayer.STATE_ENDED)
+                if (playbackState == ExoPlayer.STATE_ENDED) //播放停止自动滑动到下一视频
                     presenter.swipeToNextVideo(Position);
                 else if (playbackState == ExoPlayer.STATE_READY) {
                     holder.controlView.setPlayer(holder.player);
@@ -141,7 +142,6 @@ public class FullScreenVideoAdapter extends RecyclerView.Adapter<FullScreenVideo
         PlayerView videoView;
         LottieAnimationView heartAnimationLarge, heartAnimationSmall;
         FrameLayout frameLayout;
-        MediaController mediaController;
         SimpleExoPlayer player;
         PlayerControlView controlView;
         TextView textView, videoTitle;
@@ -167,7 +167,7 @@ public class FullScreenVideoAdapter extends RecyclerView.Adapter<FullScreenVideo
 
                 @Override
                 public void onAnimationEnd(Animator animation) {
-                    heartAnimationLarge.setVisibility(View.INVISIBLE);
+                    heartAnimationLarge.setVisibility(View.INVISIBLE); //双击点赞 播放完成后自动消失
                 }
 
                 @Override
@@ -196,9 +196,9 @@ public class FullScreenVideoAdapter extends RecyclerView.Adapter<FullScreenVideo
         }
 
         public void noticeVideoStart() {
-            player.prepare();
-            if (player.getDuration() > player.getCurrentPosition() * 2)
+            if (player.getDuration() < player.getCurrentPosition() * 2) //视频播放进度过半则从头开始播放
                 player.seekTo(100);
+            player.prepare();
             player.play();
         }
 

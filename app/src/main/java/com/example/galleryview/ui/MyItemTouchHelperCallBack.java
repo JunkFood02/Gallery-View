@@ -36,7 +36,7 @@ public class MyItemTouchHelperCallBack extends ItemTouchHelper.Callback {
 
     @Override
     public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-        if ((direction & ItemTouchHelper.LEFT) != 0)
+        if ((direction & ItemTouchHelper.LEFT) != 0) //左滑删除 右滑隐藏
             adapter.onItemDelete(viewHolder.getLayoutPosition(), (ItemAdapter.ViewHolder) viewHolder);
         else
             adapter.onItemHidden(viewHolder.getLayoutPosition(), (ItemAdapter.ViewHolder) viewHolder);
