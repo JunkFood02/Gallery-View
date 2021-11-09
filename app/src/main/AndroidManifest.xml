@@ -16,16 +16,16 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.GalleryView">
         <activity
-            android:name=".VideoEditorActivity"
+            android:name=".videoeditor.VideoEditorActivity"
             android:exported="false" />
         <activity
-            android:name=".SwipeVideoPlayActivity"
+            android:name=".videoplay.SwipeVideoPlayActivity"
             android:exported="false" />
-        <activity android:name=".BigPictureActivity" />
-        <activity android:name=".MainActivity">
+
+        <activity android:name=".gallerypage.MainActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

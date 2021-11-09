@@ -1,28 +1,21 @@
-package com.example.galleryview;
+package com.example.galleryview.gallerypage;
 
 import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.VibrationEffect;
-import android.os.Vibrator;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.animation.AlphaAnimation;
-import android.view.animation.Animation;
 import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -42,11 +35,9 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
-import com.bm.library.Info;
-import com.bm.library.PhotoView;
-import com.example.galleryview.ui.MainActivityInterface;
-import com.example.galleryview.presenter.MainActivityPresenter;
-import com.example.galleryview.ui.ItemAdapter;
+import com.example.galleryview.database.GalleryItem;
+import com.example.galleryview.R;
+import com.example.galleryview.model.MyActivity;
 import com.example.galleryview.ui.MyItemTouchHelperCallBack;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -54,8 +45,6 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
@@ -63,21 +52,17 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
 
 
     int operationCode = 0;
-    Info info;
     FloatingActionButton selectButton, clearAllButton, filterButton;
     DrawerLayout drawerLayout;
     ActivityResultLauncher<Intent> launcher_album;
     RecyclerView recyclerView;
     CoordinatorLayout coordinatorLayout;
     ImageView imageView;
-    List<String> strings = new ArrayList<>();
-    Animation fadeIn, fadeOut;
     FrameLayout background;
     ItemTouchHelper touchHelper;
     ActionBar actionBar;
     ItemTouchHelper.Callback callback;
     Toolbar toolbar;
-    PhotoView photoView;
     SwitchCompat switchCompat;
     MainActivityPresenter presenter;
     StaggeredGridLayoutManager layoutManager;
@@ -228,7 +213,6 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
         recyclerView.setLayoutManager(layoutManager);
         selectButton = findViewById(R.id.button2);
         filterButton = findViewById(R.id.filterButton);
-        photoView = findViewById(R.id.mainFullscreenImage);
         imageView = findViewById(R.id.imageView);
         switchCompat = findViewById(R.id.editorModeSwitch);
         switchCompat.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -238,8 +222,6 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
                 //简陋的侧边栏里简陋的开关用于打开视频编辑模式
             }
         });
-        fadeIn = new AlphaAnimation(0.0f, 0.9f);
-        fadeOut = new AlphaAnimation(0.9f, 0.0f);
         MainActivityPresenter.setPrivateMode(false);
         MainActivityPresenter.setEditorMode(false);
         coordinatorLayout = findViewById(R.id.CoordinatorLayout);
@@ -363,70 +345,9 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
     public void onBackPressed() {
         if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
             drawerLayout.closeDrawer(GravityCompat.START);
-        } else if (photoView.getVisibility() == View.VISIBLE)
-            hideFullscreenPhoto();
+        }
         else {
             super.onBackPressed();
-        }
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    public void showFullscreenPhoto(String path, Info imageInfo) { //还没来得及移除的图片展示功能
-        Log.d(TAG, path);
-        drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
-        photoView = findViewById(R.id.mainFullscreenImage);
-        info = imageInfo;
-        Bitmap bitmap = BitmapFactory.decodeFile(path);
-        if (bitmap != null) {
-            photoView.setImageBitmap(bitmap);
-            photoView.setAnimaDuring(200);
-            photoView.setOnLongClickListener(v -> {
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                Vibrator vibrator = (Vibrator) this.getSystemService(VIBRATOR_SERVICE);
-                vibrator.vibrate(30);
-                vibrator.vibrate(VibrationEffect.createOneShot(30, VibrationEffect.DEFAULT_AMPLITUDE));
-                builder.setItems(strings.toArray(new String[0]), (dialog, which) -> {
-                    switch (which) {
-                        case 0:
-                            Toast.makeText(MainActivity.this, "Upload", Toast.LENGTH_SHORT).show();
-                            break;
-                        case 1:
-                            Toast.makeText(MainActivity.this, "Delete", Toast.LENGTH_SHORT).show();
-                            break;
-                    }
-                });
-                builder.setCancelable(true);
-                builder.show();
-                return true;
-            });
-            photoView.animaFrom(info);
-            photoView.enable();
-            photoView.setVisibility(View.VISIBLE);
-            backgroundChange();
-            photoView.setOnClickListener(v -> {
-                if (photoView.getVisibility() == View.VISIBLE) {
-                    hideFullscreenPhoto();
-                }
-            });
-        } else {
-            Toast.makeText(this, "Fail to load image.", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    public void hideFullscreenPhoto() {
-        photoView.destroyDrawingCache();
-        drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
-        backgroundChange();
-        photoView.animaTo(info, () -> photoView.setVisibility(View.INVISIBLE));
-    }
-
-    public void backgroundChange() {
-        if (background.getVisibility() == View.INVISIBLE) {
-            background.setVisibility(View.VISIBLE);
-            background.startAnimation(fadeIn);
-        } else {
-            background.startAnimation(fadeOut);
-            background.setVisibility(View.INVISIBLE);
         }
     }
 

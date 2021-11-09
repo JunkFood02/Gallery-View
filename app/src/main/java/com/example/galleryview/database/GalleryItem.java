@@ -1,11 +1,9 @@
-package com.example.galleryview;
+package com.example.galleryview.database;
 
-import static com.example.galleryview.presenter.MainActivityPresenter.isPrivateModeEnable;
+import static com.example.galleryview.gallerypage.MainActivityPresenter.isPrivateModeEnable;
 
-import android.graphics.Bitmap;
-
-import com.example.galleryview.dao.PrivateVideo;
-import com.example.galleryview.dao.Video;
+import com.example.galleryview.database.PrivateVideo;
+import com.example.galleryview.database.Video;
 import com.example.galleryview.model.DatabaseUtils;
 
 

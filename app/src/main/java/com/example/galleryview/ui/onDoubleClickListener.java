@@ -1,7 +1,6 @@
 package com.example.galleryview.ui;
 
 import android.os.SystemClock;
-import android.view.MotionEvent;
 import android.view.View;
 
 public abstract class onDoubleClickListener implements View.OnClickListener {

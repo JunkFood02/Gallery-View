@@ -1,4 +1,4 @@
-package com.example.galleryview;
+package com.example.galleryview.videoplay;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -9,9 +9,9 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
 
-import com.example.galleryview.ui.SwipeVideoPlayInterface;
-import com.example.galleryview.presenter.SwipeVideoPlayPresenter;
-import com.example.galleryview.ui.ItemAdapter;
+import com.example.galleryview.R;
+import com.example.galleryview.model.MyActivity;
+import com.example.galleryview.gallerypage.ItemAdapter;
 
 import java.util.concurrent.ExecutionException;
 

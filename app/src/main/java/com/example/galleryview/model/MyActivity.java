@@ -1,4 +1,4 @@
-package com.example.galleryview;
+package com.example.galleryview.model;
 
 import android.annotation.SuppressLint;
 import android.content.Context;

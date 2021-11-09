@@ -1,8 +1,8 @@
-package com.example.galleryview;
+package com.example.galleryview.videoeditor;
 
-import static com.example.galleryview.presenter.VideoEditorPresenter.PROCESS_CANCEL;
-import static com.example.galleryview.presenter.VideoEditorPresenter.PROCESS_FAILURE;
-import static com.example.galleryview.presenter.VideoEditorPresenter.PROCESS_SUCCESS;
+import static com.example.galleryview.videoeditor.VideoEditorPresenter.PROCESS_CANCEL;
+import static com.example.galleryview.videoeditor.VideoEditorPresenter.PROCESS_FAILURE;
+import static com.example.galleryview.videoeditor.VideoEditorPresenter.PROCESS_SUCCESS;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -18,8 +18,8 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 
-import com.example.galleryview.presenter.VideoEditorPresenter;
-import com.example.galleryview.ui.VideoEditorInterface;
+import com.example.galleryview.R;
+import com.example.galleryview.model.MyActivity;
 import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;

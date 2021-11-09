@@ -1,20 +1,17 @@
 package com.example.galleryview.model;
 
 import android.os.Build;
-import android.util.JsonWriter;
 import android.util.Log;
 import android.webkit.WebSettings;
 
 import androidx.annotation.RequiresApi;
 
-import com.example.galleryview.MainActivity;
+import com.example.galleryview.gallerypage.MainActivity;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 
 import okhttp3.FormBody;

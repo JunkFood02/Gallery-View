@@ -1,4 +1,4 @@
-package com.example.galleryview.ui;
+package com.example.galleryview.videoplay;
 
 import android.animation.Animator;
 import android.annotation.SuppressLint;
@@ -7,7 +7,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
-import android.widget.MediaController;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -15,8 +14,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.airbnb.lottie.LottieAnimationView;
 import com.example.galleryview.R;
-import com.example.galleryview.GalleryItem;
-import com.example.galleryview.presenter.SwipeVideoPlayPresenter;
+import com.example.galleryview.database.GalleryItem;
+import com.example.galleryview.ui.VideoController;
+import com.example.galleryview.ui.onDoubleClickListener;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.Player;

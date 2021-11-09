@@ -1,12 +1,10 @@
-package com.example.galleryview.ui;
+package com.example.galleryview.gallerypage;
 
-import com.bm.library.Info;
-import com.example.galleryview.GalleryItem;
+import com.example.galleryview.database.GalleryItem;
 
 public interface MainActivityInterface {
     void insertNewImage(GalleryItem newItem);
 
-    void showFullscreenPhoto(String path, Info imageInfo);
 
     void showHideSnackbar();
 

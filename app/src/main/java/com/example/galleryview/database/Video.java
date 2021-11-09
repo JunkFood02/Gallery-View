@@ -1,11 +1,9 @@
-package com.example.galleryview.dao;
+package com.example.galleryview.database;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
-
-import com.example.galleryview.GalleryItem;
 
 @Entity
 public class Video {

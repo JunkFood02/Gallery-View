@@ -1,9 +1,5 @@
 package com.example.galleryview.model;
 
-import android.util.Log;
-
-import com.example.galleryview.dao.Video;
-
 import io.microshow.rxffmpeg.RxFFmpegCommandList;
 import io.microshow.rxffmpeg.RxFFmpegInvoke;
 import io.microshow.rxffmpeg.RxFFmpegSubscriber;

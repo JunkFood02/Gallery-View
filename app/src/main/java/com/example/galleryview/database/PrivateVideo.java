@@ -1,9 +1,7 @@
-package com.example.galleryview.dao;
+package com.example.galleryview.database;
 
 import androidx.room.Entity;
 import androidx.room.Ignore;
-
-import com.example.galleryview.GalleryItem;
 
 @Entity
 public class PrivateVideo extends Video {

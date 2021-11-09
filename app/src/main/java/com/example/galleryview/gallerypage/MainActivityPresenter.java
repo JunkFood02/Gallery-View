@@ -1,12 +1,12 @@
-package com.example.galleryview.presenter;
+package com.example.galleryview.gallerypage;
 
 import static android.os.Looper.getMainLooper;
-import static com.example.galleryview.MainActivity.HIDE_VIDEO;
-import static com.example.galleryview.MainActivity.REMOVE_HIDDEN_VIDEO;
-import static com.example.galleryview.MainActivity.SHOW_FILTER_CHOOSE_DIALOG;
-import static com.example.galleryview.MainActivity.SHOW_FULLSCREEN_IMAGE;
-import static com.example.galleryview.MainActivity.UNDO_HIDE_VIDEO;
-import static com.example.galleryview.MainActivity.UNDO_REMOVE_IMAGE;
+import static com.example.galleryview.gallerypage.MainActivity.HIDE_VIDEO;
+import static com.example.galleryview.gallerypage.MainActivity.REMOVE_HIDDEN_VIDEO;
+import static com.example.galleryview.gallerypage.MainActivity.SHOW_FILTER_CHOOSE_DIALOG;
+import static com.example.galleryview.gallerypage.MainActivity.SHOW_FULLSCREEN_IMAGE;
+import static com.example.galleryview.gallerypage.MainActivity.UNDO_HIDE_VIDEO;
+import static com.example.galleryview.gallerypage.MainActivity.UNDO_REMOVE_IMAGE;
 import static com.example.galleryview.model.DatabaseUtils.getAllVideoFromRoom;
 import static com.example.galleryview.model.DatabaseUtils.insertVideo;
 
@@ -17,14 +17,11 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
-import com.example.galleryview.GalleryItem;
-import com.example.galleryview.MainActivity;
-import com.example.galleryview.dao.PrivateVideo;
-import com.example.galleryview.dao.Video;
+import com.example.galleryview.database.GalleryItem;
+import com.example.galleryview.database.PrivateVideo;
+import com.example.galleryview.database.Video;
 import com.example.galleryview.model.DatabaseUtils;
 import com.example.galleryview.model.PhotoSelector;
-import com.example.galleryview.ui.ItemAdapter;
-import com.example.galleryview.ui.MainActivityInterface;
 
 import java.util.ArrayList;
 import java.util.List;

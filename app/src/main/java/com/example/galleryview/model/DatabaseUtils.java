@@ -1,18 +1,18 @@
 package com.example.galleryview.model;
 
-import static com.example.galleryview.MyActivity.context;
+import static com.example.galleryview.model.MyActivity.context;
 
 import android.annotation.SuppressLint;
 import android.util.Log;
 
 import androidx.room.Room;
 
-import com.example.galleryview.dao.AppDatabase;
-import com.example.galleryview.dao.PrivateVideo;
-import com.example.galleryview.dao.LabelRecord;
-import com.example.galleryview.dao.Video;
-import com.example.galleryview.dao.VideoBookDao;
-import com.example.galleryview.GalleryItem;
+import com.example.galleryview.database.AppDatabase;
+import com.example.galleryview.database.PrivateVideo;
+import com.example.galleryview.database.LabelRecord;
+import com.example.galleryview.database.Video;
+import com.example.galleryview.database.VideoBookDao;
+import com.example.galleryview.database.GalleryItem;
 
 import java.util.ArrayList;
 import java.util.List;

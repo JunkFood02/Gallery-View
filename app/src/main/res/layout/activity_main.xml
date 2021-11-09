@@ -5,7 +5,7 @@
     android:id="@+id/drawerLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context=".gallerypage.MainActivity">
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -31,13 +31,6 @@
 
             </com.google.android.material.appbar.AppBarLayout>
 
-            <com.bm.library.PhotoView
-                android:id="@+id/mainFullscreenImage"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scaleType="centerInside"
-                android:translationZ="16dp"
-                android:visibility="invisible" />
 
             <FrameLayout
                 android:id="@+id/background"

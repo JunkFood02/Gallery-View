@@ -1,4 +1,4 @@
-package com.example.galleryview.dao;
+package com.example.galleryview.database;
 
 import androidx.room.Database;
 import androidx.room.RoomDatabase;

@@ -1,13 +1,12 @@
-package com.example.galleryview.presenter;
+package com.example.galleryview.videoeditor;
 
 import android.net.Uri;
 import android.util.Log;
 
-import com.example.galleryview.dao.Video;
+import com.example.galleryview.database.Video;
 import com.example.galleryview.model.DatabaseUtils;
 import com.example.galleryview.model.PhotoSelector;
 import com.example.galleryview.model.VideoProcessor;
-import com.example.galleryview.ui.VideoEditorInterface;
 
 import io.microshow.rxffmpeg.RxFFmpegSubscriber;
 

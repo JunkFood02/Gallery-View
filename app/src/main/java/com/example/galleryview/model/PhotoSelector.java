@@ -1,5 +1,6 @@
 package com.example.galleryview.model;
 
+import android.annotation.SuppressLint;
 import android.content.ContentUris;
 import android.database.Cursor;
 import android.net.Uri;
@@ -7,7 +8,7 @@ import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.util.Log;
 
-import com.example.galleryview.MainActivity;
+import com.example.galleryview.gallerypage.MainActivity;
 
 public class PhotoSelector {
     private static final String TAG = "PhotoSelector";
@@ -68,6 +69,7 @@ public class PhotoSelector {
         return path;
     }
 
+    @SuppressLint("Range")
     private static String getImagePath(Uri uri, String selection) {
         String path = null;
         Cursor cursor = MainActivity.context.getContentResolver().query(uri, null, selection, null, null);
@@ -80,6 +82,7 @@ public class PhotoSelector {
         return path;
     }
 
+    @SuppressLint("Range")
     private static String getVideoPath(Uri uri, String selection) {
         String path = null;
         Cursor cursor = MainActivity.context.getContentResolver().query(uri, null, selection, null, null);
@@ -93,6 +96,7 @@ public class PhotoSelector {
         return path;
     }
 
+    @SuppressLint("Range")
     private static String getMusicPath(Uri uri, String selection) {
         String path = null;
         Cursor cursor = MainActivity.context.getContentResolver().query(uri, null, selection, null, null);

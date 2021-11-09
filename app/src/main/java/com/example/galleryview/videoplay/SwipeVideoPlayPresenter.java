@@ -1,16 +1,13 @@
-package com.example.galleryview.presenter;
+package com.example.galleryview.videoplay;
 
 import android.util.Log;
 
-import com.example.galleryview.GalleryItem;
-import com.example.galleryview.dao.Video;
-import com.example.galleryview.ui.FullScreenVideoAdapter;
+import com.example.galleryview.database.GalleryItem;
+import com.example.galleryview.database.Video;
 import com.example.galleryview.model.DatabaseUtils;
-import com.example.galleryview.ui.SwipeVideoPlayInterface;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 public class SwipeVideoPlayPresenter {
     private static final String TAG = "SwipeVideoPlayPresenter";

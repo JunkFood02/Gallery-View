@@ -1,13 +1,12 @@
-package com.example.galleryview.ui;
+package com.example.galleryview.gallerypage;
 
 import static com.example.galleryview.model.DatabaseUtils.insertVideo;
-import static com.example.galleryview.presenter.MainActivityPresenter.isEditorModeEnable;
-import static com.example.galleryview.presenter.MainActivityPresenter.isPrivateModeEnable;
+import static com.example.galleryview.gallerypage.MainActivityPresenter.isEditorModeEnable;
+import static com.example.galleryview.gallerypage.MainActivityPresenter.isPrivateModeEnable;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.media.MediaMetadataRetriever;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -23,13 +22,13 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.airbnb.lottie.LottieAnimationView;
 import com.bumptech.glide.Glide;
-import com.example.galleryview.MainActivity;
 import com.example.galleryview.R;
-import com.example.galleryview.SwipeVideoPlayActivity;
-import com.example.galleryview.VideoEditorActivity;
-import com.example.galleryview.dao.Video;
+import com.example.galleryview.ui.ItemTouchHelperAdapter;
+import com.example.galleryview.videoplay.SwipeVideoPlayActivity;
+import com.example.galleryview.videoeditor.VideoEditorActivity;
+import com.example.galleryview.database.Video;
 import com.example.galleryview.model.DatabaseUtils;
-import com.example.galleryview.GalleryItem;
+import com.example.galleryview.database.GalleryItem;
 
 import java.io.File;
 import java.util.List;
