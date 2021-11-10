@@ -15,8 +15,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.airbnb.lottie.LottieAnimationView;
 import com.example.galleryview.R;
 import com.example.galleryview.database.GalleryItem;
-import com.example.galleryview.ui.VideoController;
-import com.example.galleryview.ui.onDoubleClickListener;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.Player;

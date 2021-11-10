@@ -38,7 +38,6 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 import com.example.galleryview.database.GalleryItem;
 import com.example.galleryview.R;
 import com.example.galleryview.model.MyActivity;
-import com.example.galleryview.ui.MyItemTouchHelperCallBack;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;

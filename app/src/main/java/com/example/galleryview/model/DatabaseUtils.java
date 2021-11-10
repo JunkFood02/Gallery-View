@@ -28,10 +28,13 @@ public class DatabaseUtils {
             .build();
     public static VideoBookDao dao = appDatabase.dao();
 
-    @SuppressLint("StaticFieldLeak")
-
-
+    /**
+     * 插入视频
+     * @param video 输入的video视频类
+     * @return 返回视频id
+     */
     public static long insertVideo(Video video) {
+
         Future<Long> future = exec.submit(() -> dao.insertVideo(video));
         long id = 0;
         try {
@@ -41,10 +44,11 @@ public class DatabaseUtils {
         }
         return id;
     }
-    public static void deletePrivateVideoByID(long id)
-    {
+
+    public static void deletePrivateVideoByID(long id) {
         new Thread(() -> dao.deleteHiddenVideoByID(id)).start();
     }
+
     public static void insertLabel(int labelID, long videoID) {
         new Thread(() -> dao.insertLabel(new LabelRecord(labelID, videoID))).start();
 
@@ -132,8 +136,7 @@ public class DatabaseUtils {
     }
 
 
-    public static void hideVideo(GalleryItem item)
-    {
+    public static void hideVideo(GalleryItem item) {
         new Thread(() -> {
             dao.hideVideo(new PrivateVideo(item));
             deleteVideoByID(item.getId());

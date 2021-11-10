@@ -48,6 +48,7 @@ public class VideoEditorPresenter {
             }
         };
         VideoProcessor.makeVideoClip(path, newName,startPoint, length, subscriber);
+        DatabaseUtils.insertVideo(new Video(newName,0));
     }
     public static String getAudioPath(Uri uri)
     {

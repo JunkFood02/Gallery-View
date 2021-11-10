@@ -32,7 +32,6 @@ public class MainActivityPresenter {
     private GalleryItem galleryItem;
     private Handler handler;
     private boolean[] ShowLabels;
-    private final List<GalleryItem> galleryItemList = new ArrayList<>();
     private final List<String> labels = new ArrayList<>();
     static MainActivityInterface mainActivityInterface;
     private static boolean EditorModeEnable = false;
@@ -42,6 +41,7 @@ public class MainActivityPresenter {
         initLabels();
         MainActivityPresenter.mainActivityInterface = mainActivity;
         setupHandler();
+        List<GalleryItem> galleryItemList = new ArrayList<>();
         adapter=new ItemAdapter(galleryItemList, handler);
     }
 
@@ -51,6 +51,7 @@ public class MainActivityPresenter {
         labels.add("Label 2");
         labels.add("Label 3");
         ShowLabels = new boolean[labels.size()];
+        ShowLabels[0]=true;
     }
 
 
@@ -102,8 +103,11 @@ public class MainActivityPresenter {
     public CharSequence[] getLabels() {
         return labels.toArray(new CharSequence[0]);
     }
-
-    public void reArrangeAdapter(boolean[] checkedItems) { //通过选取的标签在数据库中搜索视频 并重新展示
+    /**
+     * 通过选取的标签在数据库中搜索视频 并重新展示
+     * @param checkedItems 选取的标签
+     */
+    public void reArrangeAdapter(boolean[] checkedItems) {
         List<Long> ids = new ArrayList<>();
         for (int i = 0; i < labels.size(); i++)
             if (checkedItems[i])

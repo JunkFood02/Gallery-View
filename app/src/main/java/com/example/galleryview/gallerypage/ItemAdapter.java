@@ -23,7 +23,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.airbnb.lottie.LottieAnimationView;
 import com.bumptech.glide.Glide;
 import com.example.galleryview.R;
-import com.example.galleryview.ui.ItemTouchHelperAdapter;
 import com.example.galleryview.videoplay.SwipeVideoPlayActivity;
 import com.example.galleryview.videoeditor.VideoEditorActivity;
 import com.example.galleryview.database.Video;

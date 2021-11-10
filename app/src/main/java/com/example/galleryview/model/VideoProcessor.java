@@ -17,7 +17,9 @@ public class VideoProcessor {
                 .append("-t")
                 .append("" + length)
                 .append(newPath);
-        RxFFmpegInvoke.getInstance().runCommandRxJava(commandList.build())
-                .subscribe(subscriber);
+        /*RxFFmpegInvoke.getInstance().runCommandRxJava(commandList.build())
+                .subscribe(subscriber);*/
+        FFmpegUtils.run(commandList.build());
+        //它跑起来了 它真的能跑起来
     }
 }
