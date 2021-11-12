@@ -1,5 +1,5 @@
 #include <jni.h>
-
+#include<customlog.h>
 extern "C"{
 #include "fftools/ffmpeg.h"
 
@@ -14,7 +14,14 @@ Java_com_example_galleryview_model_FFmpegUtils_run(JNIEnv *env, jclass clazz,
         auto js = (jstring) (*env).GetObjectArrayElement(commands, i);
         argv[i] = (char*) (*env).GetStringUTFChars(js, 0);
     }
-    ffmpeg_exec(argc, argv);
+    int resultCode=ffmpeg_exec(argc, argv);
+    jmethodID returnResult = (*env).GetStaticMethodID(clazz,"onProcessResult","(Z)V");
+    if (nullptr == returnResult)
+    {
+        LOGE("can't find method getStringFromStatic from JniHandle ");
+        return;
+    }
+    (*env).CallStaticVoidMethod(clazz,returnResult,resultCode);
     // TODO: implement run()
 }
 }

@@ -38,7 +38,7 @@
             android:layout_margin="15dp"
             android:max="15"
             app:layout_constraintBottom_toTopOf="@id/clipSeekBar"
-            app:layout_constraintEnd_toStartOf="@id/clipProgress"
+            app:layout_constraintEnd_toStartOf="@id/clipEndpoint"
             app:layout_constraintStart_toStartOf="parent" />
 
         <TextView
@@ -59,14 +59,14 @@
 
             android:max="15"
             app:layout_constraintBottom_toTopOf="@id/clipButton"
-            app:layout_constraintEnd_toStartOf="@id/clipProgress"
+            app:layout_constraintEnd_toStartOf="@id/clipEndpoint"
             app:layout_constraintStart_toStartOf="parent" />
 
         <TextView
-            android:id="@+id/clipProgress"
+            android:id="@+id/clipEndpoint"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="length: 0 sec"
+            android:text="end: 0 sec"
             app:layout_constraintBottom_toBottomOf="@id/clipSeekBar"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/clipSeekBar"

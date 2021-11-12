@@ -28,7 +28,7 @@ import com.google.android.exoplayer2.ui.PlayerView;
 public class VideoEditorActivity extends MyActivity implements View.OnClickListener, VideoEditorInterface {
     private static final String TAG = "VideoEditorActivity";
     String path;
-    SeekBar lengthSeekBar, beginSeekBar;
+    SeekBar endpointSeekBar, beginSeekBar;
     Button clipButton, BGMButton;
     ActivityResultLauncher<Intent> launcherForBGM;
     TextView lengthText, beginPointText;
@@ -44,10 +44,10 @@ public class VideoEditorActivity extends MyActivity implements View.OnClickListe
         setContentView(R.layout.activity_video_editor);
         path = getIntent().getStringExtra("path");
         presenter = new VideoEditorPresenter(this);
-        lengthSeekBar = findViewById(R.id.clipSeekBar);
+        endpointSeekBar = findViewById(R.id.clipSeekBar);
         clipButton = findViewById(R.id.clipButton);
         BGMButton = findViewById(R.id.BGMButton);
-        lengthText = findViewById(R.id.clipProgress);
+        lengthText = findViewById(R.id.clipEndpoint);
         beginPointText = findViewById(R.id.beginPoint);
         beginSeekBar = findViewById(R.id.beginSeekBar);
         BGMButton.setOnClickListener(this);
@@ -66,6 +66,7 @@ public class VideoEditorActivity extends MyActivity implements View.OnClickListe
                 if (playbackState == Player.STATE_READY) {
                     videoLength = (int) (player.getDuration() / 1000);
                     beginSeekBar.setMax(videoLength);
+                    endpointSeekBar.setMax(videoLength);
                     Log.d(TAG, "Duration = " + videoLength);
                 }
             }
@@ -76,7 +77,8 @@ public class VideoEditorActivity extends MyActivity implements View.OnClickListe
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 runOnUiThread(() -> {
                     beginPointText.setText("begin: " + progress + " sec");
-                    lengthSeekBar.setMax(videoLength - progress); //剪辑长度不能超过视频长度
+                    if(progress>endpointSeekBar.getProgress())
+                        endpointSeekBar.setProgress(progress);
                 });
             }
 
@@ -89,10 +91,12 @@ public class VideoEditorActivity extends MyActivity implements View.OnClickListe
 
             }
         });
-        lengthSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        endpointSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                runOnUiThread(() -> lengthText.setText("length: " + progress + " sec"));
+                runOnUiThread(() -> lengthText.setText("end: " + progress + " sec"));
+                if(progress<beginSeekBar.getProgress())
+                    beginSeekBar.setProgress(progress);
             }
 
             @Override
@@ -127,7 +131,8 @@ public class VideoEditorActivity extends MyActivity implements View.OnClickListe
                 dialog.setCancelable(true);
                 //dialog.setMessage(RxFFmpegInvoke.getInstance().getMediaInfo(path));
                 dialog.show();
-                presenter.makeVideoClip(path, beginSeekBar.getProgress(), lengthSeekBar.getProgress());
+                presenter.makeVideoClip(path, beginSeekBar.getProgress(),
+                        endpointSeekBar.getProgress()- beginSeekBar.getProgress());
                 break;
             case selectMusicButton:
                 Intent intent = new Intent("android.intent.action.GET_CONTENT");
@@ -143,13 +148,13 @@ public class VideoEditorActivity extends MyActivity implements View.OnClickListe
         dialog.dismiss();
         switch (code) {
             case PROCESS_SUCCESS:
-                Toast.makeText(context, "Success", Toast.LENGTH_SHORT).show();
+                runOnUiThread(() -> Toast.makeText(context, "Success", Toast.LENGTH_SHORT).show());
                 break;
             case PROCESS_CANCEL:
-                Toast.makeText(context, "Cancel", Toast.LENGTH_SHORT).show();
+                runOnUiThread(() -> Toast.makeText(context, "Cancel", Toast.LENGTH_SHORT).show());
                 break;
             case PROCESS_FAILURE:
-                Toast.makeText(context, "Failure", Toast.LENGTH_SHORT).show();
+                runOnUiThread(() -> Toast.makeText(context, "Failure", Toast.LENGTH_SHORT).show());
                 break;
         }
     }

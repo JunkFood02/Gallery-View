@@ -105,6 +105,7 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
             v.getContext().startActivity(intent);
         });
         holder.cardView.setOnLongClickListener(v -> {
+            Log.d(TAG, "OnLongClickListener: Item "+position);
             if (isPrivateModeEnable() || isEditorModeEnable()) return false;
             Message message = handler.obtainMessage(MainActivity.SHOW_FILTER_CHOOSE_DIALOG);
             message.obj = galleryItem;

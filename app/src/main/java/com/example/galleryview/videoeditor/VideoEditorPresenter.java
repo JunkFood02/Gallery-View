@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.example.galleryview.database.Video;
 import com.example.galleryview.model.DatabaseUtils;
+import com.example.galleryview.model.FFmpegUtils;
 import com.example.galleryview.model.PhotoSelector;
 import com.example.galleryview.model.VideoProcessor;
 
@@ -22,36 +23,24 @@ public class VideoEditorPresenter {
         this.editorInterface = editorInterface;
     }
 
-    public void makeVideoClip(String path,int startPoint, int length) {
+    public void makeVideoClip(String path, int startPoint, int length) {
 
         String newName = path.substring(0, path.length() - 4) + "_clip.mp4";
-        RxFFmpegSubscriber subscriber = new RxFFmpegSubscriber() {
+        VideoProcessor.makeVideoClip(path, newName, startPoint, length, new FFmpegUtils.onResultListener() {
             @Override
-            public void onFinish() {
-                editorInterface.onProcessFinish(PROCESS_SUCCESS);
-                DatabaseUtils.insertVideo(new Video(newName, 0));
+            public void onResult(boolean result) {
+                super.onResult(result);
+                if (!result) {
+                    editorInterface.onProcessFinish(PROCESS_SUCCESS);
+                    DatabaseUtils.insertVideo(new Video(newName, 0));
+                } else {
+                    editorInterface.onProcessFinish(PROCESS_FAILURE);
+                }
             }
-
-            @Override
-            public void onProgress(int progress, long progressTime) {
-            }
-
-            @Override
-            public void onCancel() {
-                editorInterface.onProcessFinish(PROCESS_CANCEL);
-            }
-
-            @Override
-            public void onError(String message) {
-                editorInterface.onProcessFinish(PROCESS_FAILURE);
-                Log.e(TAG, "onError: "+message);
-            }
-        };
-        VideoProcessor.makeVideoClip(path, newName,startPoint, length, subscriber);
-        DatabaseUtils.insertVideo(new Video(newName,0));
+        });
     }
-    public static String getAudioPath(Uri uri)
-    {
+
+    public static String getAudioPath(Uri uri) {
         return PhotoSelector.AudioUriToPath(uri);
     }
 }
