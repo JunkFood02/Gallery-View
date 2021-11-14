@@ -34,7 +34,9 @@ public class VideoProcessor {
         //commands.add("-decoders");
         for (String command : commands
         ) {
-            Log.d(  "ffmpegcommands", command);
+
+            Log.d("ffmpegcommands", command);
+
         }
         new Thread(() -> FFmpegUtils.run(commands.toArray(new String[0]), listener)).start();
         //它跑起来了 它真的能跑起来

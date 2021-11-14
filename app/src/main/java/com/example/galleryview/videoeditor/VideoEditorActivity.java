@@ -77,8 +77,10 @@ public class VideoEditorActivity extends MyActivity implements View.OnClickListe
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 runOnUiThread(() -> {
                     beginPointText.setText("begin: " + progress + " sec");
-                    if(progress>endpointSeekBar.getProgress())
+                    if (progress > endpointSeekBar.getProgress())
                         endpointSeekBar.setProgress(progress);
+                    player.seekTo(progress * 1000L);
+                    player.pause();
                 });
             }
 
@@ -95,8 +97,13 @@ public class VideoEditorActivity extends MyActivity implements View.OnClickListe
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 runOnUiThread(() -> lengthText.setText("end: " + progress + " sec"));
-                if(progress<beginSeekBar.getProgress())
+                if (progress < beginSeekBar.getProgress())
                     beginSeekBar.setProgress(progress);
+                if (player.getCurrentPosition() > progress * 1000L+1000L) {
+                    player.pause();
+                    player.seekTo(progress * 1000L);
+                }
+
             }
 
             @Override
@@ -132,7 +139,7 @@ public class VideoEditorActivity extends MyActivity implements View.OnClickListe
                 //dialog.setMessage(RxFFmpegInvoke.getInstance().getMediaInfo(path));
                 dialog.show();
                 presenter.makeVideoClip(path, beginSeekBar.getProgress(),
-                        endpointSeekBar.getProgress()- beginSeekBar.getProgress());
+                        endpointSeekBar.getProgress() - beginSeekBar.getProgress());
                 break;
             case selectMusicButton:
                 Intent intent = new Intent("android.intent.action.GET_CONTENT");

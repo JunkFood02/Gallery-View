@@ -42,8 +42,12 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
 
     @SuppressLint("NotifyDataSetChanged")
     public void clearList() {
-        ItemList.clear();
-        notifyItemRemoved(0);
+
+        while(!ItemList.isEmpty()){
+            notifyItemRemoved(0);
+            ItemList.remove(0);
+        }
+
     }
 
     @NonNull
