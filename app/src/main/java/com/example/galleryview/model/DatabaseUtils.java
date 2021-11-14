@@ -143,7 +143,10 @@ public class DatabaseUtils {
             cleanLabelsByVideoID(item.getId());
         }).start();
     }
-
+    public static void deleteVideoByPath(String path)
+    {
+        new Thread(() -> dao.deleteVideoByPath(path)).start();
+    }
     public static List<PrivateVideo> getPrivateVideos() {
         List<PrivateVideo> privateVideos = new ArrayList<>();
         Future<List<PrivateVideo>> future = exec.submit(() -> dao.getAllHiddenVideo());

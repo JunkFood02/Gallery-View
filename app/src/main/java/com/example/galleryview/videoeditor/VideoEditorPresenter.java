@@ -3,13 +3,14 @@ package com.example.galleryview.videoeditor;
 import android.net.Uri;
 import android.util.Log;
 
+import com.example.galleryview.database.GalleryItem;
 import com.example.galleryview.database.Video;
+import com.example.galleryview.gallerypage.ItemAdapter;
 import com.example.galleryview.model.DatabaseUtils;
 import com.example.galleryview.model.FFmpegUtils;
 import com.example.galleryview.model.PhotoSelector;
 import com.example.galleryview.model.VideoProcessor;
 
-import io.microshow.rxffmpeg.RxFFmpegSubscriber;
 
 public class VideoEditorPresenter {
     public static final int PROCESS_SUCCESS = 1;
@@ -33,6 +34,7 @@ public class VideoEditorPresenter {
                 if (!result) {
                     editorInterface.onProcessFinish(PROCESS_SUCCESS);
                     DatabaseUtils.insertVideo(new Video(newName, 0));
+                    ItemAdapter.ItemList.add(new GalleryItem(newName));
                 } else {
                     editorInterface.onProcessFinish(PROCESS_FAILURE);
                 }

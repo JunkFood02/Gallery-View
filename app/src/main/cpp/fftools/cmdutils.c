@@ -59,6 +59,8 @@
 #if HAVE_SYS_RESOURCE_H
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <customlog.h>
+
 #endif
 #ifdef _WIN32
 #include <windows.h>
@@ -785,6 +787,7 @@ do {                                                                           \
                 arg = "1";
             }
 
+            av_log(NULL, AV_LOG_DEBUG, "i'm here!\n");
             add_opt(octx, po, opt, arg);
             av_log(NULL, AV_LOG_DEBUG, " matched as option '%s' (%s) with "
                    "argument '%s'.\n", po->name, po->help, arg);
@@ -1539,7 +1542,10 @@ static void print_codecs_for_id(enum AVCodecID id, int encoder)
     printf(" (%s: ", encoder ? "encoders" : "decoders");
 
     while ((codec = next_codec_for_id(id, &iter, encoder)))
+    {
         printf("%s ", codec->name);
+        LOGD("%s", codec->name);
+    }
 
     printf(")");
 }
@@ -1602,6 +1608,7 @@ int show_codecs(void *optctx, const char *opt, const char *arg)
 
 static void print_codecs(int encoder)
 {
+    LOGD("print codecs");
     const AVCodecDescriptor **codecs;
     unsigned i, nb_codecs = get_codecs_sorted(&codecs);
 
@@ -1631,7 +1638,11 @@ static void print_codecs(int encoder)
 
             printf(" %-20s %s", codec->name, codec->long_name ? codec->long_name : "");
             if (strcmp(codec->name, desc->name))
+            {
+                LOGD(" (codec %s)", desc->name);
                 printf(" (codec %s)", desc->name);
+            }
+
 
             printf("\n");
         }

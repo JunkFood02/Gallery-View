@@ -5,6 +5,7 @@ import static com.example.galleryview.gallerypage.MainActivityPresenter.isEditor
 import static com.example.galleryview.gallerypage.MainActivityPresenter.isPrivateModeEnable;
 
 import android.annotation.SuppressLint;
+import android.content.ClipData;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Handler;
@@ -41,10 +42,8 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
 
     @SuppressLint("NotifyDataSetChanged")
     public void clearList() {
-        while (!ItemList.isEmpty()) {
-            ItemList.remove(0);
-        }
-        notifyDataSetChanged();
+        ItemList.clear();
+        notifyItemRemoved(0);
     }
 
     @NonNull

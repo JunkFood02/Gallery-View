@@ -42,7 +42,7 @@ public class MainActivityPresenter {
         MainActivityPresenter.mainActivityInterface = mainActivity;
         setupHandler();
         List<GalleryItem> galleryItemList = new ArrayList<>();
-        adapter=new ItemAdapter(galleryItemList, handler);
+        adapter = new ItemAdapter(galleryItemList, handler);
     }
 
     public void initLabels() {
@@ -51,7 +51,7 @@ public class MainActivityPresenter {
         labels.add("Label 2");
         labels.add("Label 3");
         ShowLabels = new boolean[labels.size()];
-        ShowLabels[0]=true;
+        ShowLabels[0] = true;
     }
 
 
@@ -103,8 +103,10 @@ public class MainActivityPresenter {
     public CharSequence[] getLabels() {
         return labels.toArray(new CharSequence[0]);
     }
+
     /**
      * 通过选取的标签在数据库中搜索视频 并重新展示
+     *
      * @param checkedItems 选取的标签
      */
     public void reArrangeAdapter(boolean[] checkedItems) {
@@ -191,5 +193,9 @@ public class MainActivityPresenter {
 
     public boolean[] getShowLabels() {
         return ShowLabels;
+    }
+
+    public static void checkItemList() {
+        adapter.notifyItemRangeChanged(0, ItemAdapter.ItemList.size());
     }
 }

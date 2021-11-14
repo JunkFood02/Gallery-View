@@ -19,6 +19,8 @@ public interface VideoBookDao {
     @Delete
     void deleteVideo(Video video);
 
+    @Query("delete from video where video_path=:path")
+    void deleteVideoByPath(String path);
     @Query("DELETE FROM video WHERE id=:videoID")
     void deleteVideoByID(long videoID);
 

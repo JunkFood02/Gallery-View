@@ -52,9 +52,6 @@ add_library(ffmpeg
         ${CMAKE_SOURCE_DIR}/fftools/ffmpeg_opt.c
         ${CMAKE_SOURCE_DIR}/fftools/ffmpeg_filter.c
         ${CMAKE_SOURCE_DIR}/fftools/cmdutils.c
-        include/ffmpeg.h
-        include/config.h
-        include/cmdutils.h
 )
 
 add_library(postproc
@@ -106,6 +103,13 @@ set_target_properties(swscale
         PROPERTIES IMPORTED_LOCATION
         ${CMAKE_SOURCE_DIR}/lib/${CMAKE_ANDROID_ARCH_ABI}/libswscale.so)
 
+add_library(x264
+        SHARED
+        IMPORTED)
+set_target_properties(x264
+        PROPERTIES IMPORTED_LOCATION
+        ${CMAKE_SOURCE_DIR}/lib/${CMAKE_ANDROID_ARCH_ABI}/libx264.so)
+
 include_directories(${CMAKE_SOURCE_DIR}/include
 )
 
@@ -122,6 +126,7 @@ target_link_libraries( # Specifies the target library.
         # Links the target library to the log library
         # included in the NDK.
         avfilter
+        x264
         avformat
         postproc
         avdevice

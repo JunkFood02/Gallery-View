@@ -1,5 +1,7 @@
 package com.example.galleryview.gallerypage;
 
+import static com.example.galleryview.gallerypage.ItemAdapter.ItemList;
+
 import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -350,5 +352,10 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
         }
     }
 
-
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume: ");
+        MainActivityPresenter.checkItemList();
+    }
 }

@@ -26,13 +26,12 @@ public class HttpUtils {
     //这里也是没用的代码 别看！
     private static final String TAG = "HttpUtils";
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
     public static void getToken() {
         new Thread(() -> {
             OkHttpClient client=new OkHttpClient();
             RequestBody requestBody = new FormBody.Builder()
                     .add("username", "sunnycloud105@gmail.com")
-                    .add("password", "Whathappened123")
+                    .add("password", "")
                     .build();
 
             Request request = new Request.Builder()
@@ -59,7 +58,6 @@ public class HttpUtils {
 
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
     public static void postImage(String filename, String filePath) {
 
         new Thread(() -> {

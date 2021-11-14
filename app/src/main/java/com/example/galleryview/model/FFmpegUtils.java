@@ -20,6 +20,8 @@ public class FFmpegUtils {
 
 
     static {
+
+        System.loadLibrary("x264");
         System.loadLibrary("galleryview");
     }
     public static void run(String[] commands,onResultListener listener)

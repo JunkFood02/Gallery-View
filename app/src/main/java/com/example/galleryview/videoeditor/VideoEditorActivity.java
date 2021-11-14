@@ -158,4 +158,10 @@ public class VideoEditorActivity extends MyActivity implements View.OnClickListe
                 break;
         }
     }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        player.pause();
+    }
 }
