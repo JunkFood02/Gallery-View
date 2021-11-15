@@ -86,6 +86,7 @@ public class FullScreenVideoAdapter extends RecyclerView.Adapter<FullScreenVideo
             @Override
             public void onClick(View v) {
                 super.onClick(v);
+
                 if (!holder.controlView.isVisible())
                     holder.controlView.show();
             }
@@ -98,6 +99,14 @@ public class FullScreenVideoAdapter extends RecyclerView.Adapter<FullScreenVideo
                 currentItem.doubleClickLike();
                 holder.updateHeartCount(currentItem.getIS_LIKED());
 
+            }
+
+            @Override
+            public void onSingleClick() {
+                if(holder.player.isPlaying())
+                    holder.player.pause();
+                else
+                    holder.player.play();
             }
         });
 
@@ -142,16 +151,22 @@ public class FullScreenVideoAdapter extends RecyclerView.Adapter<FullScreenVideo
         FrameLayout frameLayout;
         SimpleExoPlayer player;
         PlayerControlView controlView;
-        TextView textView, videoTitle;
+        TextView heartCountText, videoTitle,videoDescription;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             videoView = itemView.findViewById(R.id.VideoPlayView);
-            textView = itemView.findViewById(R.id.heartCountText);
+            heartCountText = itemView.findViewById(R.id.heartCountText);
             frameLayout = itemView.findViewById(R.id.VideoFrame);
             player = new SimpleExoPlayer.Builder(itemView.getContext()).build();
             videoTitle = itemView.findViewById(R.id.videoTitle);
             controlView = itemView.findViewById(R.id.controlView);
+            videoDescription=itemView.findViewById(R.id.videoDescription);
+            controlView.setShowNextButton(false);
+            controlView.setShowPreviousButton(false);
+            controlView.setShowFastForwardButton(false);
+            controlView.setShowRewindButton(false);
+            controlView.addVisibilityListener(visibility -> videoDescription.setVisibility(visibility));
             heartAnimationLarge = itemView.findViewById(R.id.doubleClickAnimation);
             heartAnimationSmall = itemView.findViewById(R.id.heartAnimationSmall);
             heartAnimationLarge.setScaleX((float) 2);
@@ -181,7 +196,7 @@ public class FullScreenVideoAdapter extends RecyclerView.Adapter<FullScreenVideo
         }
 
         public void updateHeartCount(int cnt) {
-            textView.setText("" + cnt);
+            heartCountText.setText("" + cnt);
         }
 
         @Override

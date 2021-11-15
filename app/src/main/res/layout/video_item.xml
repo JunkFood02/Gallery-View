@@ -68,6 +68,15 @@
             android:textColor="@color/white"
             android:text="0"
             android:id="@+id/heartCountText"/>
-
+        <TextView
+            android:layout_width="match_parent"
+            android:id="@+id/videoDescription"
+            android:layout_height="wrap_content"
+            android:maxLines="3"
+            android:text="default video description\ndefault video description\ndefault video description"
+            android:textColor="@color/exo_white_opacity_70"
+            android:layout_marginHorizontal="15dp"
+            app:layout_constraintBottom_toTopOf="@id/controlView"
+            />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>
