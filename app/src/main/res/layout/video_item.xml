@@ -45,8 +45,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/controlView"
+            android:animateLayoutChanges="true"
             android:touchscreenBlocksFocus="true"
-            app:layout_constraintBottom_toBottomOf="parent"/>
+            app:layout_constraintBottom_toBottomOf="parent" />
         <com.airbnb.lottie.LottieAnimationView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

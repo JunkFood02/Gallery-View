@@ -2,6 +2,9 @@ package com.example.galleryview.videoplay;
 
 import android.animation.Animator;
 import android.annotation.SuppressLint;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -31,10 +34,21 @@ public class FullScreenVideoAdapter extends RecyclerView.Adapter<FullScreenVideo
     SwipeVideoPlayPresenter presenter;
     private static final String TAG = "FullScreenVideoAdapter";
     private List<GalleryItem> itemList;
-    private final Map<Integer, VideoController> controllers = new HashMap<>();
+    public static final int SINGLE_CLICK=1;
+    private static final Map<Integer, VideoController> controllers = new HashMap<>();
     // 因为实在搞不懂 RecyclerView 的回收缓存机制 所以用了这种取巧的方法
     // 将每个 ViewHolder 与其位置的建立映射加入 map 方便调用
-
+    private static final Handler handler=new Handler(Looper.getMainLooper())
+    {
+        @Override
+        public void handleMessage(@NonNull Message msg) {
+            super.handleMessage(msg);
+            if(msg.what==SINGLE_CLICK)
+            {
+                Objects.requireNonNull(controllers.get(msg.arg1)).changeVideoPlayStatus();
+            }
+        }
+    };
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -68,20 +82,6 @@ public class FullScreenVideoAdapter extends RecyclerView.Adapter<FullScreenVideo
             }
         });
 
-
-        /*
-        holder.mediaController=new MediaController(holder.itemView.getContext());
-        holder.mediaController.setMediaPlayer(holder.videoView);
-        holder.videoView.setMediaController(holder.mediaController);
-        holder.videoView.setVideoPath(currentItem.getImagePath());
-        holder.videoView.setOnPreparedListener(mp -> {
-            if (Position == presenter.getActivePosition())
-                mp.start();
-            mp.seekTo(1);
-        });
-        holder.videoView.setOnCompletionListener(mp -> presenter.swipeToNextVideo(Position));
-        */
-
         holder.itemView.setOnClickListener(new onDoubleClickListener() {
             @Override
             public void onClick(View v) {
@@ -98,15 +98,12 @@ public class FullScreenVideoAdapter extends RecyclerView.Adapter<FullScreenVideo
                 holder.heartAnimationLarge.setVisibility(View.VISIBLE);
                 currentItem.doubleClickLike();
                 holder.updateHeartCount(currentItem.getIS_LIKED());
-
             }
-
             @Override
             public void onSingleClick() {
-                if(holder.player.isPlaying())
-                    holder.player.pause();
-                else
-                    holder.player.play();
+                Message message=handler.obtainMessage(SINGLE_CLICK);
+                message.arg1=holder.getLayoutPosition();
+            handler.sendMessage(message);
             }
         });
 
@@ -164,8 +161,6 @@ public class FullScreenVideoAdapter extends RecyclerView.Adapter<FullScreenVideo
             videoDescription=itemView.findViewById(R.id.videoDescription);
             controlView.setShowNextButton(false);
             controlView.setShowPreviousButton(false);
-            controlView.setShowFastForwardButton(false);
-            controlView.setShowRewindButton(false);
             controlView.addVisibilityListener(visibility -> videoDescription.setVisibility(visibility));
             heartAnimationLarge = itemView.findViewById(R.id.doubleClickAnimation);
             heartAnimationSmall = itemView.findViewById(R.id.heartAnimationSmall);
@@ -206,6 +201,14 @@ public class FullScreenVideoAdapter extends RecyclerView.Adapter<FullScreenVideo
 
         public void noticeVideoRestart() {
             player.play();
+        }
+
+        @Override
+        public void changeVideoPlayStatus() {
+            if(player.isPlaying())
+                noticeVideoStop();
+            else
+                noticeVideoStart();
         }
 
         public void noticeVideoStart() {

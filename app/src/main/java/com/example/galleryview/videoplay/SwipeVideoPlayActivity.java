@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
 
 import com.example.galleryview.R;
@@ -39,6 +40,8 @@ public class SwipeVideoPlayActivity extends MyActivity implements SwipeVideoPlay
 
     private void init() throws ExecutionException, InterruptedException {
         int position = getIntent().getIntExtra("position", 0);
+        View decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_IMMERSIVE|View.SYSTEM_UI_FLAG_FULLSCREEN|View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
         textView = findViewById(R.id.heartCountText);
         recyclerView = findViewById(R.id.VideoRecyclerView);
         presenter = new SwipeVideoPlayPresenter(this);

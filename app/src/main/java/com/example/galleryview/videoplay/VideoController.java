@@ -4,4 +4,5 @@ public interface VideoController {
 void noticeVideoStart();
 void noticeVideoStop();
 void noticeVideoRestart();
+void changeVideoPlayStatus();
 }
