@@ -6,10 +6,13 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
+import android.view.DragEvent;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -24,6 +27,8 @@ import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.ui.PlayerControlView;
 import com.google.android.exoplayer2.ui.PlayerView;
+import com.google.android.exoplayer2.ui.StyledPlayerControlView;
+import com.google.android.exoplayer2.ui.TimeBar;
 
 import java.util.HashMap;
 import java.util.List;
@@ -34,21 +39,13 @@ public class FullScreenVideoAdapter extends RecyclerView.Adapter<FullScreenVideo
     SwipeVideoPlayPresenter presenter;
     private static final String TAG = "FullScreenVideoAdapter";
     private List<GalleryItem> itemList;
-    public static final int SINGLE_CLICK=1;
+    public static final int SINGLE_CLICK = 1;
+    private static float PosX, PosY;
     private static final Map<Integer, VideoController> controllers = new HashMap<>();
     // 因为实在搞不懂 RecyclerView 的回收缓存机制 所以用了这种取巧的方法
     // 将每个 ViewHolder 与其位置的建立映射加入 map 方便调用
-    private static final Handler handler=new Handler(Looper.getMainLooper())
-    {
-        @Override
-        public void handleMessage(@NonNull Message msg) {
-            super.handleMessage(msg);
-            if(msg.what==SINGLE_CLICK)
-            {
-                Objects.requireNonNull(controllers.get(msg.arg1)).changeVideoPlayStatus();
-            }
-        }
-    };
+
+
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -78,32 +75,66 @@ public class FullScreenVideoAdapter extends RecyclerView.Adapter<FullScreenVideo
                     presenter.swipeToNextVideo(Position);
                 else if (playbackState == ExoPlayer.STATE_READY) {
                     holder.controlView.setPlayer(holder.player);
+                    holder.controlView.hideImmediately();
+                    holder.timeBar.addListener(new TimeBar.OnScrubListener() {
+                        final long durationSec = (holder.player.getDuration() / 1000);
+                        final String dmin = durationSec / 600 + String.valueOf((durationSec / 60 % 10));
+                        final String dsec = String.valueOf((durationSec % 60 / 10)) + durationSec % 10;
+                        final String duration = dmin + ":" + dsec;
+
+                        @Override
+                        public void onScrubStart(TimeBar timeBar, long position) {
+                            holder.videoProgress.setVisibility(View.VISIBLE);
+                        }
+
+                        @SuppressLint("SetTextI18n")
+                        @Override
+                        public void onScrubMove(TimeBar timeBar, long position) {
+                            int secs = (int) (position / 1000);
+                            String min = secs / 600 + String.valueOf((secs / 60 % 10));
+                            String sec = String.valueOf((secs % 60 / 10)) + secs % 10;
+                            holder.videoProgress.setText(min + ":" + sec + " / " + duration);
+                        }
+
+                        @Override
+                        public void onScrubStop(TimeBar timeBar, long position, boolean canceled) {
+                            holder.videoProgress.setVisibility(View.INVISIBLE);
+                            holder.noticeVideoRestart();
+                        }
+                    });
                 }
             }
         });
 
+        holder.itemView.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                PosX = event.getX() - 180;
+                PosY = event.getY() - 180;
+            }
+            return false;
+        });
         holder.itemView.setOnClickListener(new onDoubleClickListener() {
             @Override
             public void onClick(View v) {
                 super.onClick(v);
-
-                if (!holder.controlView.isVisible())
-                    holder.controlView.show();
             }
 
             @Override
             public void onDoubleClick() {
+                holder.heartAnimationLarge.setX(PosX);
+                holder.heartAnimationLarge.setY(PosY);
                 holder.heartAnimationLarge.playAnimation();
                 holder.heartAnimationSmall.playAnimation();
                 holder.heartAnimationLarge.setVisibility(View.VISIBLE);
                 currentItem.doubleClickLike();
                 holder.updateHeartCount(currentItem.getIS_LIKED());
             }
+
             @Override
             public void onSingleClick() {
-                Message message=handler.obtainMessage(SINGLE_CLICK);
-                message.arg1=holder.getLayoutPosition();
-            handler.sendMessage(message);
+                Message message = holder.handler.obtainMessage(SINGLE_CLICK);
+                message.arg1 = holder.getLayoutPosition();
+                holder.handler.sendMessage(message);
             }
         });
 
@@ -143,30 +174,40 @@ public class FullScreenVideoAdapter extends RecyclerView.Adapter<FullScreenVideo
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder implements VideoController {
+
         PlayerView videoView;
+        ImageView playButton;
         LottieAnimationView heartAnimationLarge, heartAnimationSmall;
         FrameLayout frameLayout;
         SimpleExoPlayer player;
-        PlayerControlView controlView;
-        TextView heartCountText, videoTitle,videoDescription;
+        StyledPlayerControlView controlView;
+        TextView heartCountText;
+        TextView videoTitle, videoProgress;
+        TimeBar timeBar;
+        private final Handler handler = new Handler(Looper.getMainLooper()) {
+            @Override
+            public void handleMessage(@NonNull Message msg) {
+                super.handleMessage(msg);
+                if (msg.what == SINGLE_CLICK) {
+                    Objects.requireNonNull(controllers.get(msg.arg1)).changeVideoPlayStatus();
+                }
+            }
+        };
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             videoView = itemView.findViewById(R.id.VideoPlayView);
             heartCountText = itemView.findViewById(R.id.heartCountText);
             frameLayout = itemView.findViewById(R.id.VideoFrame);
+            playButton=itemView.findViewById(R.id.playButton);
             player = new SimpleExoPlayer.Builder(itemView.getContext()).build();
             videoTitle = itemView.findViewById(R.id.videoTitle);
+            videoProgress = itemView.findViewById(R.id.videoProgressText);
             controlView = itemView.findViewById(R.id.controlView);
-            videoDescription=itemView.findViewById(R.id.videoDescription);
-            controlView.setShowNextButton(false);
-            controlView.setShowPreviousButton(false);
-            controlView.addVisibilityListener(visibility -> videoDescription.setVisibility(visibility));
+            controlView.setShowTimeoutMs(1000000);
+            timeBar = controlView.findViewById(R.id.exo_progress);
             heartAnimationLarge = itemView.findViewById(R.id.doubleClickAnimation);
             heartAnimationSmall = itemView.findViewById(R.id.heartAnimationSmall);
-            heartAnimationLarge.setScaleX((float) 2);
-            heartAnimationLarge.setScaleY((float) 2);
-            heartAnimationLarge.setSpeed((float) 1);
             heartAnimationLarge.setVisibility(View.INVISIBLE);
             heartAnimationLarge.addAnimatorListener(new Animator.AnimatorListener() {
                 @Override
@@ -200,19 +241,28 @@ public class FullScreenVideoAdapter extends RecyclerView.Adapter<FullScreenVideo
         }
 
         public void noticeVideoRestart() {
+            playButton.setVisibility(View.INVISIBLE);
             player.play();
         }
 
         @Override
-        public void changeVideoPlayStatus() {
-            if(player.isPlaying())
+        public boolean changeVideoPlayStatus() {
+            if (player.isPlaying()) {
+                Log.d(TAG, "changeVideoPlayStatus: pause");
                 noticeVideoStop();
-            else
-                noticeVideoStart();
+                controlView.show();
+                playButton.setVisibility(View.VISIBLE);
+                return true;
+            } else {
+                Log.d(TAG, "changeVideoPlayStatus: restart");
+                noticeVideoRestart();
+                controlView.hide();
+                return false;
+            }
         }
 
         public void noticeVideoStart() {
-            if (player.getDuration() < player.getCurrentPosition() * 2) //视频播放进度过半则从头开始播放
+            if (player.getDuration() < player.getCurrentPosition()+2000L )
                 player.seekTo(100);
             player.prepare();
             player.play();
