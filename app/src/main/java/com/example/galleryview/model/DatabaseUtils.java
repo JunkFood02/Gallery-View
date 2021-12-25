@@ -2,7 +2,6 @@ package com.example.galleryview.model;
 
 import static com.example.galleryview.model.MyActivity.context;
 
-import android.annotation.SuppressLint;
 import android.util.Log;
 
 import androidx.room.Room;
@@ -12,7 +11,6 @@ import com.example.galleryview.database.PrivateVideo;
 import com.example.galleryview.database.LabelRecord;
 import com.example.galleryview.database.Video;
 import com.example.galleryview.database.VideoBookDao;
-import com.example.galleryview.database.GalleryItem;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +28,7 @@ public class DatabaseUtils {
 
     /**
      * 插入视频
+     *
      * @param video 输入的video视频类
      * @return 返回视频id
      */
@@ -143,10 +142,11 @@ public class DatabaseUtils {
             cleanLabelsByVideoID(item.getId());
         }).start();
     }
-    public static void deleteVideoByPath(String path)
-    {
+
+    public static void deleteVideoByPath(String path) {
         new Thread(() -> dao.deleteVideoByPath(path)).start();
     }
+
     public static List<PrivateVideo> getPrivateVideos() {
         List<PrivateVideo> privateVideos = new ArrayList<>();
         Future<List<PrivateVideo>> future = exec.submit(() -> dao.getAllHiddenVideo());

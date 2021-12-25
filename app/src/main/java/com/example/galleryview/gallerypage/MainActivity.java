@@ -1,7 +1,5 @@
 package com.example.galleryview.gallerypage;
 
-import static com.example.galleryview.gallerypage.ItemAdapter.ItemList;
-
 import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -37,7 +35,7 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
-import com.example.galleryview.database.GalleryItem;
+import com.example.galleryview.model.GalleryItem;
 import com.example.galleryview.R;
 import com.example.galleryview.model.MyActivity;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -180,7 +178,8 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             openAlbum();
-        } else Toast.makeText(this, "You denied the permission.", Toast.LENGTH_SHORT).show();
+        } else
+            Toast.makeText(this, "You denied the permission.", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -346,8 +345,7 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
     public void onBackPressed() {
         if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
             drawerLayout.closeDrawer(GravityCompat.START);
-        }
-        else {
+        } else {
             super.onBackPressed();
         }
     }

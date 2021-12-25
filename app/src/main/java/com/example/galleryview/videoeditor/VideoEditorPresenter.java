@@ -1,9 +1,8 @@
 package com.example.galleryview.videoeditor;
 
 import android.net.Uri;
-import android.util.Log;
 
-import com.example.galleryview.database.GalleryItem;
+import com.example.galleryview.model.GalleryItem;
 import com.example.galleryview.database.Video;
 import com.example.galleryview.gallerypage.ItemAdapter;
 import com.example.galleryview.model.DatabaseUtils;

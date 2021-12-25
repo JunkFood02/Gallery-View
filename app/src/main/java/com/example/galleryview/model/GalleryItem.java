@@ -1,4 +1,4 @@
-package com.example.galleryview.database;
+package com.example.galleryview.model;
 
 import static com.example.galleryview.gallerypage.MainActivityPresenter.isPrivateModeEnable;
 

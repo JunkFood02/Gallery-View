@@ -1,6 +1,6 @@
 package com.example.galleryview.gallerypage;
 
-import com.example.galleryview.database.GalleryItem;
+import com.example.galleryview.model.GalleryItem;
 
 public interface MainActivityInterface {
     void insertNewImage(GalleryItem newItem);

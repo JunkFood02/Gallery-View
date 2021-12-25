@@ -3,6 +3,8 @@ package com.example.galleryview.database;
 import androidx.room.Entity;
 import androidx.room.Ignore;
 
+import com.example.galleryview.model.GalleryItem;
+
 @Entity
 public class PrivateVideo extends Video {
     public PrivateVideo(String path, int heartCount) {

@@ -17,7 +17,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
-import com.example.galleryview.database.GalleryItem;
+import com.example.galleryview.model.GalleryItem;
 import com.example.galleryview.database.PrivateVideo;
 import com.example.galleryview.database.Video;
 import com.example.galleryview.model.DatabaseUtils;

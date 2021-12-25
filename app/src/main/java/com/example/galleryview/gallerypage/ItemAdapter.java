@@ -5,7 +5,6 @@ import static com.example.galleryview.gallerypage.MainActivityPresenter.isEditor
 import static com.example.galleryview.gallerypage.MainActivityPresenter.isPrivateModeEnable;
 
 import android.annotation.SuppressLint;
-import android.content.ClipData;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Handler;
@@ -28,7 +27,7 @@ import com.example.galleryview.videoplay.SwipeVideoPlayActivity;
 import com.example.galleryview.videoeditor.VideoEditorActivity;
 import com.example.galleryview.database.Video;
 import com.example.galleryview.model.DatabaseUtils;
-import com.example.galleryview.database.GalleryItem;
+import com.example.galleryview.model.GalleryItem;
 
 import java.io.File;
 import java.util.List;
@@ -43,7 +42,7 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
     @SuppressLint("NotifyDataSetChanged")
     public void clearList() {
 
-        while(!ItemList.isEmpty()){
+        while (!ItemList.isEmpty()) {
             notifyItemRemoved(0);
             ItemList.remove(0);
         }
@@ -108,7 +107,7 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
             v.getContext().startActivity(intent);
         });
         holder.cardView.setOnLongClickListener(v -> {
-            Log.d(TAG, "OnLongClickListener: Item "+position);
+            Log.d(TAG, "OnLongClickListener: Item " + position);
             if (isPrivateModeEnable() || isEditorModeEnable()) return false;
             Message message = handler.obtainMessage(MainActivity.SHOW_FILTER_CHOOSE_DIALOG);
             message.obj = galleryItem;
@@ -157,19 +156,19 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> im
     public void onItemHidden(int position, ViewHolder holder) {
         GalleryItem currentItem = ItemList.get(position);
         Log.d(TAG, "onItemHidden: id = " + currentItem.getId());
-        ItemList.remove(position);
-        notifyItemRemoved(position);
+        ItemList.remove(position); //将当前位置视频从视图中移除
+        notifyItemRemoved(position); //提醒视图更新
         if (!isPrivateModeEnable()) { //非隐私状态下右滑为隐藏视频
-            DatabaseUtils.hideVideo(currentItem);
-            Message message = handler.obtainMessage(MainActivity.HIDE_VIDEO);
-            handler.sendMessage(message);
+            DatabaseUtils.hideVideo(currentItem); //数据库操作
+            Message message = handler.obtainMessage(MainActivity.HIDE_VIDEO); //设置Message标号
+            handler.sendMessage(message); //提醒UI层更新
         } else { //隐私状态下右滑为取消隐藏视频
             DatabaseUtils.deletePrivateVideoByID(currentItem.getId());
-            Video video = new Video(currentItem);
-            currentItem.setId(insertVideo(video));
-            DatabaseUtils.insertLabel(0, currentItem.getId());
+            Video video = new Video(currentItem); //将该隐私视频从隐私视频数据库中删除
+            currentItem.setId(insertVideo(video)); //插入到主数据库中
+            DatabaseUtils.insertLabel(0, currentItem.getId()); //初始化视频标签
             Message message = handler.obtainMessage(MainActivity.UNDO_HIDE_VIDEO);
-            handler.sendMessage(message);
+            handler.sendMessage(message); //提醒UI层更新
         }
     }
 

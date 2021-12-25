@@ -55,6 +55,10 @@ public class SwipeVideoPlayActivity extends MyActivity implements SwipeVideoPlay
 
 
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            /**
+             * 根据滑动状态控制视频的播放与暂停
+             * @param newState 视图的滚动状态
+             */
             @Override
             public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
                 super.onScrollStateChanged(recyclerView, newState);
@@ -63,8 +67,10 @@ public class SwipeVideoPlayActivity extends MyActivity implements SwipeVideoPlay
                     presenter.setActivePosition(currentPosition);
                     Log.d(TAG, "onScrollStateChanged: currentPosition=" + currentPosition);
                     presenter.getAdapter().VideoStart(currentPosition);
-                    //当滚动停止时 使当前位置视频开始播放 即实现滑动后自动播放
-                    //使用滑动停止的状态就可以不用判断上滑或是下滑
+                    /*
+                    当滚动停止时 使当前位置视频开始播放 即实现滑动后自动播放
+                    使用滑动停止的状态就可以不用判断上滑或是下滑
+                    */
                 } else if (newState == RecyclerView.SCREEN_STATE_ON) {
                     presenter.getAdapter().VideoStop();//当滑动开始时 使所有位置视频停止播放
                 }
