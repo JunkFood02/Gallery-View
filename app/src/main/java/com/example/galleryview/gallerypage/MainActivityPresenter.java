@@ -56,6 +56,7 @@ public class MainActivityPresenter {
 
 
     public void readAlbumDataFromRoomDatabase() {
+        adapter.clearList();
         List<Video> videos = getAllVideoFromRoom();
         for (Video v : videos
         ) {
@@ -196,6 +197,6 @@ public class MainActivityPresenter {
     }
 
     public static void checkItemList() {
-        adapter.notifyItemRangeChanged(0, ItemAdapter.ItemList.size());
+        adapter.notifyItemRangeChanged(ItemAdapter.ItemList.size()-1, ItemAdapter.ItemList.size());
     }
 }

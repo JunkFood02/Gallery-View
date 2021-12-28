@@ -24,6 +24,7 @@ import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.exoplayer2.ui.StyledPlayerControlView;
 import com.google.android.exoplayer2.ui.TimeBar;
@@ -168,7 +169,7 @@ public class FullScreenVideoAdapter extends RecyclerView.Adapter<FullScreenVideo
     public void VideoStop() {
         for (int i = 0; i <= getItemCount(); i++)
             if (controllers.containsKey(i))
-                Objects.requireNonNull(controllers.get(i)).noticeVideoStop();
+                Objects.requireNonNull(controllers.get(i)).noticeVideoPause();
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder implements VideoController {
@@ -197,7 +198,7 @@ public class FullScreenVideoAdapter extends RecyclerView.Adapter<FullScreenVideo
             videoView = itemView.findViewById(R.id.VideoPlayView);
             heartCountText = itemView.findViewById(R.id.heartCountText);
             frameLayout = itemView.findViewById(R.id.VideoFrame);
-            playButton=itemView.findViewById(R.id.playButton);
+            playButton = itemView.findViewById(R.id.playButton);
             player = new SimpleExoPlayer.Builder(itemView.getContext()).build();
             videoTitle = itemView.findViewById(R.id.videoTitle);
             videoProgress = itemView.findViewById(R.id.videoProgressText);
@@ -229,38 +230,54 @@ public class FullScreenVideoAdapter extends RecyclerView.Adapter<FullScreenVideo
 
         }
 
+        public void showCurrentPosition() {
+            videoProgress.setVisibility(View.VISIBLE);
+            final long durationSec = (player.getDuration() / 1000);
+            final String dmin = durationSec / 600 + String.valueOf((durationSec / 60 % 10));
+            final String dsec = String.valueOf((durationSec % 60 / 10)) + durationSec % 10;
+            final String duration = dmin + ":" + dsec;
+            int secs = (int) (player.getCurrentPosition() / 1000);
+            String min = secs / 600 + String.valueOf((secs / 60 % 10));
+            String sec = String.valueOf((secs % 60 / 10)) + secs % 10;
+            videoProgress.setText(min + ":" + sec + " / " + duration);
+        }
+
         public void updateHeartCount(int cnt) {
             heartCountText.setText("" + cnt);
         }
 
         @Override
-        public void noticeVideoStop() {
+        public void noticeVideoPause() {
             player.pause();
         }
 
         public void noticeVideoRestart() {
+            if (player.getDuration() < player.getCurrentPosition() + 100L)
+                player.seekTo(100);
             playButton.setVisibility(View.INVISIBLE);
             player.play();
+            controlView.hide();
+            videoProgress.setVisibility(View.INVISIBLE);
         }
 
         @Override
         public boolean changeVideoPlayStatus() {
             if (player.isPlaying()) {
                 Log.d(TAG, "changeVideoPlayStatus: pause");
-                noticeVideoStop();
+                noticeVideoPause();
                 controlView.show();
                 playButton.setVisibility(View.VISIBLE);
+                showCurrentPosition();
                 return true;
             } else {
                 Log.d(TAG, "changeVideoPlayStatus: restart");
                 noticeVideoRestart();
-                controlView.hide();
                 return false;
             }
         }
 
         public void noticeVideoStart() {
-            if (player.getDuration() < player.getCurrentPosition()+2000L )
+            if (player.getDuration() < player.getCurrentPosition() + 2000L)
                 player.seekTo(100);
             player.prepare();
             player.play();

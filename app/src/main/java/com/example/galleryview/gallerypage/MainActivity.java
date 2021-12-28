@@ -298,6 +298,14 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
         clearAllButton.setVisibility(View.GONE);
     }
 
+    private void ExitPrivateSpace() {
+        MainActivityPresenter.setPrivateMode(false);
+        presenter.readAlbumDataFromRoomDatabase();
+        if (actionBar != null) actionBar.setTitle(getTitle());
+        filterButton.setVisibility(View.VISIBLE);
+        selectButton.setVisibility(View.VISIBLE);
+        clearAllButton.setVisibility(View.INVISIBLE);
+    }
 
     @Override
     public void showFilterChooseDialog(CharSequence[] items, boolean[] checkedItems, long videoID) {
@@ -331,7 +339,7 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
 
     @Override
     public void showUndoHideSnackbar() {
-        Snackbar.make(selectButton, "Video is unhidden now. Restart the Activity to check.", Snackbar.LENGTH_SHORT)
+        Snackbar.make(selectButton, "Video is unhidden now.", Snackbar.LENGTH_SHORT)
                 .show();
     }
 
@@ -345,6 +353,8 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
     public void onBackPressed() {
         if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
             drawerLayout.closeDrawer(GravityCompat.START);
+        } else if (MainActivityPresenter.isPrivateModeEnable()) {
+            ExitPrivateSpace();
         } else {
             super.onBackPressed();
         }
@@ -354,6 +364,7 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
     protected void onResume() {
         super.onResume();
         Log.d(TAG, "onResume: ");
-        MainActivityPresenter.checkItemList();
+        if (MainActivityPresenter.isEditorModeEnable())
+            MainActivityPresenter.checkItemList();
     }
 }

@@ -66,7 +66,7 @@ public class SwipeVideoPlayActivity extends MyActivity implements SwipeVideoPlay
                     int currentPosition = layoutManager.findFirstCompletelyVisibleItemPosition();
                     presenter.setActivePosition(currentPosition);
                     Log.d(TAG, "onScrollStateChanged: currentPosition=" + currentPosition);
-                    presenter.getAdapter().VideoStart(currentPosition);
+                    presenter.getAdapter().VideoRestart(currentPosition);
                     /*
                     当滚动停止时 使当前位置视频开始播放 即实现滑动后自动播放
                     使用滑动停止的状态就可以不用判断上滑或是下滑
