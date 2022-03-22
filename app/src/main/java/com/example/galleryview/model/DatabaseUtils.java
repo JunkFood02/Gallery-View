@@ -14,6 +14,7 @@ import com.example.galleryview.database.VideoBookDao;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -88,7 +89,12 @@ public class DatabaseUtils {
     public static boolean[] findCheckedLabelsByVideoId(int labelNumbers, long videoID) {
         List<LabelRecord> labelRecords = new ArrayList<>();
         boolean[] checkedItems = new boolean[labelNumbers];
-        Future<List<LabelRecord>> future = exec.submit(() -> dao.getAllLabelRecordByVideoID(videoID));
+        Future<List<LabelRecord>> future = exec.submit(new Callable<List<LabelRecord>>() {
+            @Override
+            public List<LabelRecord> call() throws Exception {
+                return dao.getAllLabelRecordByVideoID(videoID);
+            }
+        });
         try {
             labelRecords = future.get();
         } catch (ExecutionException | InterruptedException e) {

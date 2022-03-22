@@ -65,7 +65,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
-
+int cnt=0;
 static int init_report(const char *env);
 
 AVDictionary *sws_dict;
@@ -136,6 +136,7 @@ void exit_program(int ret)
 double parse_number_or_die(const char *context, const char *numstr, int type,
                            double min, double max)
 {
+    av_log(NULL, AV_LOG_ERROR,"parse_number_or_die:arg=%s\n",numstr);
     char *tail;
     const char *error;
     double d = av_strtod(numstr, &tail);
@@ -288,6 +289,8 @@ static int write_option(void *optctx, const OptionDef *po, const char *opt,
 {
     /* new-style options contain an offset into optctx, old-style address of
      * a global var*/
+    av_log(NULL, AV_LOG_ERROR,
+           "write_option for %d times\n",++cnt);
     void *dst = po->flags & (OPT_OFFSET | OPT_SPEC) ?
                 (uint8_t *)optctx + po->u.off : po->u.dst_ptr;
     int *dstcount;
@@ -305,7 +308,8 @@ static int write_option(void *optctx, const OptionDef *po, const char *opt,
         (*so)[*dstcount - 1].specifier = str;
         dst = &(*so)[*dstcount - 1].u;
     }
-
+    av_log(NULL, AV_LOG_ERROR,
+           "arg=%s\n",arg);
     if (po->flags & OPT_STRING) {
         char *str;
         str = av_strdup(arg);

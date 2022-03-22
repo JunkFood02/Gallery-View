@@ -144,7 +144,7 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
                 builder.show();
                 break;
             case deleteButtonID:
-                AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
+                MaterialAlertDialogBuilder dialog = new MaterialAlertDialogBuilder(MainActivity.this);
                 dialog.setTitle("Remove All Videos");
                 dialog.setMessage("Are you sure to remove all the videos? " + "This operation cannot be withdrawn.");
                 dialog.setPositiveButton("Confirm", (dialog1, which) -> {
@@ -259,7 +259,7 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
             public void afterTextChanged(Editable s) {
             }
         });
-        AlertDialog.Builder builder = new AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this)
                 .setTitle("Enable Private Mode")
                 .setMessage("Password need to be verified to gain access to private videos.")
                 .setPositiveButton("Confirm", null)

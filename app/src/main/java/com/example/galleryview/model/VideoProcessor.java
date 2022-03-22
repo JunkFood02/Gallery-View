@@ -1,6 +1,9 @@
 package com.example.galleryview.model;
 
 
+import static com.example.galleryview.model.MyActivity.context;
+
+import android.media.MediaScannerConnection;
 import android.util.Log;
 
 import java.io.File;
@@ -16,7 +19,7 @@ public class VideoProcessor {
         if (file.exists() && file.isFile() && file.canWrite())
             if (file.delete()) {
                 Log.d(TAG, "makeVideoClip: present clip was deleted!");
-                DatabaseUtils.deleteVideoByPath(newPath);
+                //DatabaseUtils.deleteVideoByPath(newPath);
             }
         List<String> commands = new ArrayList<>();
         commands.add("ffmpeg");
@@ -29,16 +32,26 @@ public class VideoProcessor {
         commands.add("-t");
         commands.add("" + length);
         commands.add("-y");
-        commands.add(newPath);
-        //commands.add("ffmpeg");
-        //commands.add("-decoders");
+        commands.add(newPath);/*
+        commands.add("ffmpeg");
+        commands.add("-decoders");*/
+
         for (String command : commands
         ) {
 
             Log.d("ffmpegcommands", command);
 
         }
-        new Thread(() -> FFmpegUtils.run(commands.toArray(new String[0]), listener)).start();
+        new Thread(() -> FFmpegUtils.run(commands.toArray(new String[0]),
+                new FFmpegUtils.onResultListener() {
+                    @Override
+                    public void onResult(boolean result) {
+                        super.onResult(result);
+                        MediaScannerConnection.scanFile(context,
+                                new String[]{newPath}, null, null
+                        );
+                    }
+                })).start();
         //它跑起来了 它真的能跑起来
     }
 }
