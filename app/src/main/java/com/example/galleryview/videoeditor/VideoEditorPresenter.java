@@ -10,6 +10,8 @@ import com.example.galleryview.model.FFmpegUtils;
 import com.example.galleryview.model.PhotoSelector;
 import com.example.galleryview.model.VideoProcessor;
 
+import java.io.File;
+
 
 public class VideoEditorPresenter {
     public static final int PROCESS_SUCCESS = 1;
