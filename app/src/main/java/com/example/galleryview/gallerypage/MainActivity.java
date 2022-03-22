@@ -364,7 +364,5 @@ public class MainActivity extends MyActivity implements View.OnClickListener, Ma
     protected void onResume() {
         super.onResume();
         Log.d(TAG, "onResume: ");
-        if (MainActivityPresenter.isEditorModeEnable())
-            MainActivityPresenter.checkItemList();
     }
 }

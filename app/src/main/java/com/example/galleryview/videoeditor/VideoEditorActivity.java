@@ -19,6 +19,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 
 import com.example.galleryview.R;
+import com.example.galleryview.gallerypage.MainActivityPresenter;
 import com.example.galleryview.model.MyActivity;
 import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.Player;
@@ -32,7 +33,6 @@ public class VideoEditorActivity extends MyActivity implements View.OnClickListe
     Button clipButton, BGMButton;
     ActivityResultLauncher<Intent> launcherForBGM;
     TextView lengthText, beginPointText;
-    ProgressDialog dialog;
     PlayerView playerView;
     SimpleExoPlayer player;
     private int videoLength;
@@ -99,7 +99,7 @@ public class VideoEditorActivity extends MyActivity implements View.OnClickListe
                 runOnUiThread(() -> lengthText.setText("end: " + progress + " sec"));
                 if (progress < beginSeekBar.getProgress())
                     beginSeekBar.setProgress(progress);
-                if (player.getCurrentPosition() > progress * 1000L+1000L) {
+                if (player.getCurrentPosition() > progress * 1000L + 1000L) {
                     player.pause();
                     player.seekTo(progress * 1000L);
                 }
@@ -133,11 +133,7 @@ public class VideoEditorActivity extends MyActivity implements View.OnClickListe
         final int clipButtonID = R.id.clipButton, selectMusicButton = R.id.BGMButton;
         switch (v.getId()) {
             case clipButtonID:
-                dialog = new ProgressDialog(v.getContext());
-                dialog.setTitle("Clip progressing");
-                dialog.setCancelable(true);
-                //dialog.setMessage(RxFFmpegInvoke.getInstance().getMediaInfo(path));
-                dialog.show();
+                Toast.makeText(getContext(), "Video processing.", Toast.LENGTH_SHORT).show();
                 presenter.makeVideoClip(path, beginSeekBar.getProgress(),
                         endpointSeekBar.getProgress() - beginSeekBar.getProgress());
                 break;
@@ -152,10 +148,12 @@ public class VideoEditorActivity extends MyActivity implements View.OnClickListe
 
     @Override
     public void onProcessFinish(int code) {
-        dialog.dismiss();
         switch (code) {
             case PROCESS_SUCCESS:
-                runOnUiThread(() -> Toast.makeText(context, "Success", Toast.LENGTH_SHORT).show());
+                runOnUiThread(() -> {
+                    MainActivityPresenter.checkItemList();
+                    Toast.makeText(context, "Success", Toast.LENGTH_SHORT).show();
+                });
                 break;
             case PROCESS_CANCEL:
                 runOnUiThread(() -> Toast.makeText(context, "Cancel", Toast.LENGTH_SHORT).show());

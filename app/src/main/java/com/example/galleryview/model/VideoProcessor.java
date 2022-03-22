@@ -42,16 +42,7 @@ public class VideoProcessor {
             Log.d("ffmpegcommands", command);
 
         }
-        new Thread(() -> FFmpegUtils.run(commands.toArray(new String[0]),
-                new FFmpegUtils.onResultListener() {
-                    @Override
-                    public void onResult(boolean result) {
-                        super.onResult(result);
-                        MediaScannerConnection.scanFile(context,
-                                new String[]{newPath}, null, null
-                        );
-                    }
-                })).start();
+        new Thread(() -> FFmpegUtils.run(commands.toArray(new String[0]), listener)).start();
         //它跑起来了 它真的能跑起来
     }
 }
