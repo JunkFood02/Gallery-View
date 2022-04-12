@@ -110,7 +110,8 @@ set_target_properties(x264
         PROPERTIES IMPORTED_LOCATION
         ${CMAKE_SOURCE_DIR}/lib/${CMAKE_ANDROID_ARCH_ABI}/libx264.so)
 
-include_directories(${CMAKE_SOURCE_DIR}/include
+include_directories(${CMAKE_SOURCE_DIR}/include/${CMAKE_ANDROID_ARCH_ABI}
+        ${CMAKE_SOURCE_DIR}/include/
 )
 
 target_link_libraries( # Specifies the target library.
